@@ -136,6 +136,9 @@
     adminLoginForm: document.getElementById('adminLoginForm'),
     adminPassInput: document.getElementById('adminPassInput'),
     adminDashboardContent: document.getElementById('adminDashboardContent'),
+    adminSearchInput: document.getElementById('adminSearchInput'),
+    adminClearSearchBtn: document.getElementById('adminClearSearchBtn'),
+    adminCategorySelect: document.getElementById('adminCategorySelect'),
     adminRefreshBtn: document.getElementById('adminRefreshBtn'),
     adminLogoutBtn: document.getElementById('adminLogoutBtn'),
     adminProductsTbody: document.getElementById('adminProductsTbody'),
@@ -1033,6 +1036,34 @@
       });
     }
 
+    // Admin Search & Category Filter Listeners
+    if (DOM.adminSearchInput) {
+      DOM.adminSearchInput.addEventListener('input', debounce((e) => {
+        adminState.searchQuery = e.target.value.toLowerCase().trim();
+        if (DOM.adminClearSearchBtn) {
+          DOM.adminClearSearchBtn.style.display = adminState.searchQuery ? 'inline-flex' : 'none';
+        }
+        renderAdminProductsList();
+      }, 250));
+    }
+
+    if (DOM.adminClearSearchBtn) {
+      DOM.adminClearSearchBtn.addEventListener('click', () => {
+        DOM.adminSearchInput.value = '';
+        adminState.searchQuery = '';
+        DOM.adminClearSearchBtn.style.display = 'none';
+        renderAdminProductsList();
+        DOM.adminSearchInput.focus();
+      });
+    }
+
+    if (DOM.adminCategorySelect) {
+      DOM.adminCategorySelect.addEventListener('change', (e) => {
+        adminState.categoryFilter = e.target.value;
+        renderAdminProductsList();
+      });
+    }
+
     if (DOM.adminCancelEditBtn) {
       DOM.adminCancelEditBtn.addEventListener('click', closeAdminEditPanel);
     }
@@ -1056,6 +1087,11 @@
      ========================================================================== */
   // SHA-256 hash exacto de 'stylegt2026'
   const ADMIN_PASS_HASH = "9de23c2a72d7353d43135433f26629580325cdbc743e36160d81666eca6f5922";
+
+  const adminState = {
+    searchQuery: '',
+    categoryFilter: 'all'
+  };
 
   async function sha256(message) {
     const msgBuffer = new TextEncoder().encode(message);
@@ -1093,9 +1129,23 @@
   function showAdminDashboard() {
     DOM.adminAuthScreen.style.display = 'none';
     DOM.adminDashboardContent.style.display = 'block';
+    populateAdminCategoriesSelect();
     renderAdminProductsList();
     closeAdminEditPanel();
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  function populateAdminCategoriesSelect() {
+    if (!DOM.adminCategorySelect) return;
+    const currentVal = DOM.adminCategorySelect.value;
+    DOM.adminCategorySelect.innerHTML = '<option value="all">Todas las Categorías</option>';
+    state.categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id;
+      opt.textContent = cat.nombre;
+      DOM.adminCategorySelect.appendChild(opt);
+    });
+    DOM.adminCategorySelect.value = currentVal || 'all';
   }
 
   async function handleAdminLogin(e) {
@@ -1124,7 +1174,30 @@
     if (!DOM.adminProductsTbody) return;
     DOM.adminProductsTbody.innerHTML = '';
 
-    state.products.forEach(prod => {
+    // Filtrar según búsqueda y categoría seleccionada
+    const filtered = state.products.filter(prod => {
+      const matchesSearch = !adminState.searchQuery || 
+        prod.nombre.toLowerCase().includes(adminState.searchQuery) ||
+        (prod.descripcion && prod.descripcion.toLowerCase().includes(adminState.searchQuery));
+
+      const matchesCat = adminState.categoryFilter === 'all' || 
+        String(prod.categoria_id) === String(adminState.categoryFilter);
+
+      return matchesSearch && matchesCat;
+    });
+
+    if (filtered.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td colspan="5" style="text-align:center; padding: 2rem; color: var(--color-text-muted);">
+          No se encontraron productos con los filtros aplicados.
+        </td>
+      `;
+      DOM.adminProductsTbody.appendChild(tr);
+      return;
+    }
+
+    filtered.forEach(prod => {
       const tr = document.createElement('tr');
       const cat = state.categories.find(c => c.id === prod.categoria_id);
       const catName = cat ? cat.nombre : 'Colección';

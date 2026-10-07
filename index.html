@@ -520,6 +520,23 @@
           </div>
         </div>
 
+        <!-- Admin Search and Category Filters Bar -->
+        <div class="admin-filters-bar">
+          <div class="admin-search-box">
+            <i data-lucide="search" class="icon-xs"></i>
+            <input type="text" id="adminSearchInput" placeholder="Buscar por nombre..." autocomplete="off">
+            <button id="adminClearSearchBtn" class="clear-search-btn" title="Limpiar" style="display: none;">
+              <i data-lucide="x" class="icon-xs"></i>
+            </button>
+          </div>
+          <div class="admin-category-filter">
+            <i data-lucide="filter" class="icon-xs"></i>
+            <select id="adminCategorySelect">
+              <option value="all">Todas las Categorías</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Products List in Admin -->
         <div class="admin-products-table-wrapper">
           <table class="admin-table">
