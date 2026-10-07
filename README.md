@@ -21,7 +21,7 @@ Plataforma de comercio electronico orientada a moda contemporanea y prendas mini
 
 StyleGT es una aplicacion web monolitica ligera enfocada en el rendimiento, la accesibilidad y una experiencia de usuario limpia. No depende de frameworks pesados en el cliente, logrando tiempos de carga instantaneos y una manipulacion eficiente del DOM mediante JavaScript nativo.
 
-El diseno sigue principios de estetica editorial y minimalista, optimizado para ofrecer una navegacion comoda tanto en dispositivos moviles como en computadoras de escritorio.
+El diseño sigue principios de estetica editorial y minimalista, optimizado para ofrecer una navegacion comoda tanto en dispositivos moviles como en computadoras de escritorio.
 
 ---
 
