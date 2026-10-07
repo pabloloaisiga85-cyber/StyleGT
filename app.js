@@ -7,6 +7,24 @@
   'use strict';
 
   /* ==========================================================================
+     0. Utility Helpers (defined first — used throughout)
+     ========================================================================== */
+  function debounce(fn, ms) {
+    var timer;
+    return function () {
+      var args = arguments;
+      clearTimeout(timer);
+      timer = setTimeout(function () { fn.apply(null, args); }, ms || 300);
+    };
+  }
+
+  function escapeHTML(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(String(str || '')));
+    return div.innerHTML;
+  }
+
+  /* ==========================================================================
      1. Supabase Client Configuration
      ========================================================================== */
   const SUPABASE_URL = "https://yygmdjfvpvnpsmjaqbqp.supabase.co";
@@ -477,9 +495,14 @@
     DOM.qtyDisplay.textContent = '1';
 
     if (matched && matched.stock > 0) {
+      const isLowStock = matched.stock <= 5;
+      const urgencyBadge = isLowStock
+        ? `<span class="stock-urgency-badge">¡Solo quedan ${matched.stock} unidades!</span>`
+        : '';
       DOM.stockStatusBox.innerHTML = `
         <span class="stock-dot in-stock"></span>
         <span class="stock-text">${matched.stock} disponibles en stock</span>
+        ${urgencyBadge}
       `;
       DOM.addToCartBtn.disabled = false;
       DOM.qtyMinusBtn.disabled = true;
@@ -737,52 +760,46 @@
     DOM.submitOrderSpinner.style.display = 'block';
 
     try {
-      // 1. Insert order into "pedidos"
-      const orderPayload = {
-        nombre_cliente: nombre,
-        telefono: telefono,
-        direccion_envio: direccion,
-        total: parseFloat(total.toFixed(2)),
-        estado: 'pendiente'
-      };
-
-      const { data: pedidoData, error: pedidoError } = await supabase
-        .from('pedidos')
-        .insert([orderPayload])
-        .select()
-        .single();
-
-      if (pedidoError) throw pedidoError;
-      if (!pedidoData || !pedidoData.id) {
-        throw new Error('No se pudo obtener el ID del pedido registrado.');
-      }
-
-      const pedidoId = pedidoData.id;
-
-      // 2. Prepare and insert order items into "items_pedido"
+      // Single atomic RPC call: inserts pedido + items + decrements stock in one transaction.
+      // If stock is insufficient for any variant, the DB raises an exception and nothing is committed.
       const itemsPayload = state.cart.map(item => ({
-        pedido_id: pedidoId,
         variante_id: item.variante_id,
         cantidad: item.cantidad,
         precio_unitario: parseFloat(item.precio.toFixed(2))
       }));
 
-      const { error: itemsError } = await supabase
-        .from('items_pedido')
-        .insert(itemsPayload);
+      const { data: result, error } = await supabase.rpc('crear_pedido_completo', {
+        p_nombre_cliente: nombre,
+        p_telefono: telefono,
+        p_direccion_envio: direccion,
+        p_total: parseFloat(total.toFixed(2)),
+        p_items: itemsPayload
+      });
 
-      if (itemsError) throw itemsError;
+      if (error) {
+        // Surface stock-specific errors in a user-friendly way
+        if (error.message && error.message.toLowerCase().includes('stock')) {
+          showToast('Uno o más productos ya no tienen stock suficiente. Revisa tu carrito.', 'error');
+        } else {
+          throw error;
+        }
+        return;
+      }
 
-      // 3. Success! Clear cart and show confirmation modal
+      // Success — build a compatible order object for the success modal
       const placedCart = [...state.cart];
+      const pedidoData = {
+        id: result.id,
+        nombre_cliente: nombre,
+        telefono: telefono,
+        direccion_envio: direccion,
+        total: parseFloat(total.toFixed(2))
+      };
+
       state.cart = [];
       saveCart();
-
-      // Reset form
       DOM.checkoutForm.reset();
       closeCheckoutModal();
-
-      // Show success modal
       openSuccessModal(pedidoData, placedCart);
       showToast('¡Pedido registrado con éxito!', 'success');
 
@@ -790,7 +807,6 @@
       console.error('Error registrando el pedido en Supabase:', err);
       showToast('Ocurrió un error al procesar el pedido. Intenta nuevamente.', 'error');
     } finally {
-      // Reset button state
       DOM.submitOrderBtn.disabled = false;
       DOM.submitOrderBtnText.style.display = 'inline';
       DOM.submitOrderSpinner.style.display = 'none';
@@ -800,18 +816,19 @@
   function openSuccessModal(order, items) {
     DOM.confirmedOrderId.textContent = `#ORD-${order.id}`;
 
+    // escapeHTML prevents XSS from any user-supplied field
     DOM.orderReceiptDetails.innerHTML = `
       <div>
         <span>Cliente:</span>
-        <span>${order.nombre_cliente}</span>
+        <span>${escapeHTML(order.nombre_cliente)}</span>
       </div>
       <div>
         <span>Teléfono:</span>
-        <span>${order.telefono}</span>
+        <span>${escapeHTML(order.telefono)}</span>
       </div>
       <div>
         <span>Dirección:</span>
-        <span>${order.direccion_envio}</span>
+        <span>${escapeHTML(order.direccion_envio)}</span>
       </div>
       <div>
         <span>Total Pagado:</span>
@@ -839,12 +856,12 @@
      10. Event Listeners Initialization
      ========================================================================== */
   function setupEventListeners() {
-    // Search input
-    DOM.searchInput.addEventListener('input', (e) => {
+    // Search input — debounced to prevent re-render on every keystroke
+    DOM.searchInput.addEventListener('input', debounce(function (e) {
       state.searchQuery = e.target.value;
       DOM.clearSearchBtn.style.display = state.searchQuery ? 'flex' : 'none';
       renderProducts();
-    });
+    }, 300));
 
     DOM.clearSearchBtn.addEventListener('click', () => {
       DOM.searchInput.value = '';
@@ -932,6 +949,35 @@
         else if (DOM.successModal.classList.contains('open')) closeSuccessModal();
       }
     });
+
+    // Share product button — Web Share API (native mobile share sheet)
+    const shareBtn = document.getElementById('shareProductBtn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', async () => {
+        const product = state.modalProduct;
+        if (!product) return;
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: `StyleGT — ${product.nombre}`,
+              text: product.descripcion || 'Mira este producto en StyleGT',
+              url: window.location.href
+            });
+          } catch (err) {
+            // User cancelled or browser blocked — not an error worth surfacing
+            if (err.name !== 'AbortError') console.warn('Share failed:', err);
+          }
+        } else {
+          // Fallback: copy URL to clipboard
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+            showToast('Enlace copiado al portapapeles', 'success');
+          } catch (_) {
+            showToast('Tu navegador no soporta la función de compartir', 'error');
+          }
+        }
+      });
+    }
   }
 
   /* ==========================================================================
