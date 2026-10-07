@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleGT | Moda Contemporánea & Esenciales Minimalistas</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="logo-icon.png">
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="announcement-bar">
+    <p>✨ Envío gratis en órdenes mayores a $50 | Diseñado con estilo minimalista y sostenible</p>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar-container">
+      <a href="#" class="brand-logo">
+        <img src="logo-icon.png" alt="StyleGT Logo" class="brand-logo-img">
+        <span class="brand-name">StyleGT</span>
+      </a>
+
+      <!-- Desktop Navigation links -->
+      <nav class="nav-links">
+        <a href="#catalogo" class="nav-link active">Colección</a>
+        <a href="#destacados" class="nav-link">Lo Nuevo</a>
+        <a href="#nosotros" class="nav-link">Filosofía</a>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="nav-actions">
+        <!-- Search Trigger -->
+        <div class="search-box">
+          <i data-lucide="search" class="icon-sm"></i>
+          <input type="text" id="searchInput" placeholder="Buscar prendas..." autocomplete="off">
+          <button id="clearSearchBtn" class="clear-search-btn" title="Limpiar búsqueda" style="display: none;">
+            <i data-lucide="x" class="icon-xs"></i>
+          </button>
+        </div>
+
+        <!-- Cart Button -->
+        <button id="openCartBtn" class="cart-trigger-btn" aria-label="Abrir carrito">
+          <i data-lucide="shopping-bag" class="icon-md"></i>
+          <span id="cartCountBadge" class="cart-badge">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section" id="destacados">
+    <div class="container hero-container">
+      <div class="hero-content">
+        <span class="hero-tag">Edición Esencial 2026</span>
+        <h1 class="hero-title">Elegancia sobria, confort atemporal.</h1>
+        <p class="hero-description">
+          Prendas confeccionadas con materiales de alta densidad y cortes contemporáneos diseñados para durar.
+        </p>
+        <div class="hero-cta-group">
+          <a href="#catalogo" class="btn btn-primary">
+            Explorar Catálogo
+            <i data-lucide="arrow-right" class="icon-sm"></i>
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-image-wrapper">
+          <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1000&auto=format&fit=crop&q=80" alt="Colección StyleGT" class="hero-img">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            <span>Nueva Colección Disponible</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Value Propositions Banner -->
+  <section class="features-bar">
+    <div class="container features-grid">
+      <div class="feature-item">
+        <i data-lucide="truck" class="feature-icon"></i>
+        <div>
+          <h4>Envíos a Todo el País</h4>
+          <p>Entrega rápida y segura en tu puerta</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <i data-lucide="feather" class="feature-icon"></i>
+        <div>
+          <h4>100% Algodón Premium</h4>
+          <p>Tejidos de gramaje pesado ultra durables</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <i data-lucide="shield-check" class="feature-icon"></i>
+        <div>
+          <h4>Compra Confiable</h4>
+          <p>Inventario sincronizado y atención personalizada</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Catalog Section -->
+  <main class="catalog-section" id="catalogo">
+    <div class="container">
+      
+      <!-- Catalog Controls Header -->
+      <div class="catalog-header">
+        <div>
+          <h2 class="section-title">Catálogo de Productos</h2>
+          <p class="section-subtitle">Selecciona tus piezas favoritas y elige talla y color en el detalle.</p>
+        </div>
+
+        <!-- Sorting selector -->
+        <div class="filter-sort-controls">
+          <label for="sortSelect" class="sort-label">Ordenar:</label>
+          <select id="sortSelect" class="custom-select">
+            <option value="default">Destacados</option>
+            <option value="price-asc">Precio: Menor a Mayor</option>
+            <option value="price-desc">Precio: Mayor a Menor</option>
+            <option value="name-asc">Nombre (A - Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Categories Filter Tabs -->
+      <div class="categories-wrapper">
+        <div class="categories-scroll" id="categoriesContainer">
+          <button class="cat-pill active" data-category="all">
+            <span>Todos los productos</span>
+          </button>
+          <!-- Dynamic category pills will load here -->
+        </div>
+      </div>
+
+      <!-- Active Filters Summary & Count -->
+      <div class="catalog-status-bar">
+        <span id="productCountLabel" class="product-count">Cargando productos...</span>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="products-grid" id="productsGrid">
+        <!-- Skeleton Loaders -->
+        <div class="product-card skeleton-card">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line price"></div>
+        </div>
+        <div class="product-card skeleton-card">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line price"></div>
+        </div>
+        <div class="product-card skeleton-card">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line price"></div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <i data-lucide="inbox" class="empty-icon"></i>
+        <h3>No se encontraron productos</h3>
+        <p>Intenta ajustar la búsqueda o seleccionar otra categoría.</p>
+        <button id="resetFiltersBtn" class="btn btn-secondary">Ver todos los productos</button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Brand Philosophy Section -->
+  <section class="about-section" id="nosotros">
+    <div class="container about-grid">
+      <div class="about-card">
+        <span class="about-number">01</span>
+        <h3>Diseño Consciente</h3>
+        <p>Siluetas atemporales y paletas cromáticas neutras para crear un guardarropa versátil y duradero.</p>
+      </div>
+      <div class="about-card">
+        <span class="about-number">02</span>
+        <h3>Materiales Superiores</h3>
+        <p>Seleccionamos fibras densas y costuras reforzadas para mantener la textura lavado tras lavado.</p>
+      </div>
+      <div class="about-card">
+        <span class="about-number">03</span>
+        <h3>Atención Personalizada</h3>
+        <p>Cada pedido es preparado con dedicación y entregado con seguimiento directo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Detail & Variant Selection Modal -->
+  <div class="modal-backdrop" id="productModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card modal-lg">
+      <button class="modal-close-btn" id="closeProductModalBtn" aria-label="Cerrar ventana">
+        <i data-lucide="x" class="icon-md"></i>
+      </button>
+
+      <div class="product-detail-layout" id="productDetailContent">
+        <!-- Left: Image Showcase -->
+        <div class="detail-gallery">
+          <img src="" alt="" id="modalProductImg" class="modal-product-img">
+        </div>
+
+        <!-- Right: Selection & Details -->
+        <div class="detail-info">
+          <span class="detail-category-badge" id="modalProductCategory">Categoría</span>
+          <h2 class="detail-title" id="modalProductTitle">Nombre del Producto</h2>
+          <div class="detail-price-box">
+            <span class="detail-price" id="modalProductPrice">$0.00</span>
+          </div>
+
+          <p class="detail-description" id="modalProductDesc">
+            Descripción del producto...
+          </p>
+
+          <hr class="divider">
+
+          <!-- Variants Selection Section -->
+          <div class="variant-selection-group">
+            
+            <!-- Color Selector -->
+            <div class="variant-block">
+              <div class="variant-header-row">
+                <label class="variant-label">Color:</label>
+                <span class="selected-variant-name" id="selectedColorName">-</span>
+              </div>
+              <div class="variant-options-list" id="colorOptionsContainer">
+                <!-- Color pills loaded dynamically -->
+              </div>
+            </div>
+
+            <!-- Size Selector -->
+            <div class="variant-block">
+              <div class="variant-header-row">
+                <label class="variant-label">Talla:</label>
+                <span class="selected-variant-name" id="selectedSizeName">-</span>
+              </div>
+              <div class="variant-options-list" id="sizeOptionsContainer">
+                <!-- Size chips loaded dynamically -->
+              </div>
+            </div>
+
+            <!-- Stock Status indicator -->
+            <div class="stock-status-box" id="stockStatusBox">
+              <span class="stock-dot in-stock"></span>
+              <span id="stockStatusText" class="stock-text">Selecciona tus opciones</span>
+            </div>
+
+            <!-- Quantity & Add to Cart -->
+            <div class="purchase-row">
+              <div class="quantity-control">
+                <button type="button" class="qty-btn" id="qtyMinusBtn" aria-label="Disminuir cantidad">
+                  <i data-lucide="minus" class="icon-xs"></i>
+                </button>
+                <span id="qtyDisplay" class="qty-number">1</span>
+                <button type="button" class="qty-btn" id="qtyPlusBtn" aria-label="Aumentar cantidad">
+                  <i data-lucide="plus" class="icon-xs"></i>
+                </button>
+              </div>
+
+              <button id="addToCartBtn" class="btn btn-primary btn-add-cart">
+                <i data-lucide="shopping-bag" class="icon-sm"></i>
+                <span>Añadir al Carrito</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Product Details Extra Bullet Points -->
+          <div class="detail-perks">
+            <div class="perk-item">
+              <i data-lucide="check" class="icon-xs perk-check"></i>
+              <span>Envío seguro a todo el país</span>
+            </div>
+            <div class="perk-item">
+              <i data-lucide="check" class="icon-xs perk-check"></i>
+              <span>Garantía de calidad garantizada</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shopping Cart Drawer -->
+  <div class="cart-backdrop" id="cartDrawerBackdrop"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+    <div class="cart-drawer-header">
+      <div class="cart-drawer-title-box">
+        <i data-lucide="shopping-bag" class="icon-md"></i>
+        <h3>Tu Carrito</h3>
+        <span class="cart-drawer-badge" id="cartDrawerCount">0</span>
+      </div>
+      <button class="cart-close-btn" id="closeCartBtn" aria-label="Cerrar carrito">
+        <i data-lucide="x" class="icon-md"></i>
+      </button>
+    </div>
+
+    <!-- Cart Items List Container -->
+    <div class="cart-items-container" id="cartItemsContainer">
+      <!-- Items dynamically injected here -->
+    </div>
+
+    <!-- Empty Cart Notification -->
+    <div class="cart-empty-state" id="cartEmptyState">
+      <div class="cart-empty-icon-box">
+        <i data-lucide="shopping-bag" class="icon-xl"></i>
+      </div>
+      <h4>Tu carrito está vacío</h4>
+      <p>Explora nuestra colección y añade tus prendas favoritas.</p>
+      <button class="btn btn-secondary btn-sm" id="cartEmptyExploreBtn">
+        Ver catálogo
+      </button>
+    </div>
+
+    <!-- Cart Footer & Checkout Action -->
+    <div class="cart-drawer-footer" id="cartFooter">
+      <div class="cart-summary-line">
+        <span>Subtotal</span>
+        <span id="cartSubtotal">$0.00</span>
+      </div>
+      <div class="cart-summary-line">
+        <span>Envío estimado</span>
+        <span id="cartShippingText">Gratis</span>
+      </div>
+      <div class="cart-summary-line total-line">
+        <span>Total</span>
+        <span id="cartTotal">$0.00</span>
+      </div>
+
+      <button id="goToCheckoutBtn" class="btn btn-primary btn-block btn-checkout">
+        <span>Proceder al Checkout</span>
+        <i data-lucide="arrow-right" class="icon-sm"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Checkout Modal -->
+  <div class="modal-backdrop" id="checkoutModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card modal-md">
+      <button class="modal-close-btn" id="closeCheckoutModalBtn" aria-label="Cerrar checkout">
+        <i data-lucide="x" class="icon-md"></i>
+      </button>
+
+      <div class="checkout-header">
+        <div class="checkout-icon-wrap">
+          <i data-lucide="credit-card" class="icon-md"></i>
+        </div>
+        <div>
+          <h2>Finalizar Pedido</h2>
+          <p>Ingresa tus datos de entrega para confirmar tu compra.</p>
+        </div>
+      </div>
+
+      <form id="checkoutForm" class="checkout-form">
+        <!-- Order Items Summary preview -->
+        <div class="checkout-items-preview" id="checkoutItemsPreview">
+          <!-- Dynamic compact list -->
+        </div>
+
+        <div class="checkout-fields">
+          <div class="form-group">
+            <label for="clienteNombre" class="form-label">
+              Nombre completo <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i data-lucide="user" class="input-icon"></i>
+              <input type="text" id="clienteNombre" class="form-input" placeholder="Ej. Carlos Mendoza" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="clienteTelefono" class="form-label">
+              Teléfono / WhatsApp <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i data-lucide="phone" class="input-icon"></i>
+              <input type="tel" id="clienteTelefono" class="form-input" placeholder="Ej. +502 5555 4433" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="clienteDireccion" class="form-label">
+              Dirección de entrega <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i data-lucide="map-pin" class="input-icon"></i>
+              <textarea id="clienteDireccion" class="form-input form-textarea" rows="2" placeholder="Zona, calle, número de casa, referencias..." required></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Checkout Total breakdown -->
+        <div class="checkout-total-card">
+          <div class="checkout-total-row">
+            <span>Total a Pagar</span>
+            <span class="checkout-total-amount" id="checkoutTotalAmount">$0.00</span>
+          </div>
+          <span class="checkout-payment-notice">
+            <i data-lucide="lock" class="icon-xs"></i>
+            Pago contra entrega o coordinado por WhatsApp.
+          </span>
+        </div>
+
+        <button type="submit" id="submitOrderBtn" class="btn btn-primary btn-block btn-lg">
+          <span id="submitOrderBtnText">Confirmar Pedido</span>
+          <div id="submitOrderSpinner" class="spinner" style="display: none;"></div>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order Confirmation Success Modal -->
+  <div class="modal-backdrop" id="successModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card modal-sm success-card">
+      <div class="success-icon-wrap">
+        <i data-lucide="check-circle-2" class="icon-xl success-icon"></i>
+      </div>
+
+      <h2 class="success-title">¡Pedido Confirmado!</h2>
+      <p class="success-subtitle">
+        Muchas gracias por tu compra. Hemos registrado tu pedido satisfactoriamente en el sistema.
+      </p>
+
+      <div class="order-id-badge-wrap">
+        <span class="order-id-label">Número de Pedido:</span>
+        <span class="order-id-val" id="confirmedOrderId">#---</span>
+      </div>
+
+      <div class="order-receipt-summary" id="orderReceiptDetails">
+        <!-- Summary loaded dynamically -->
+      </div>
+
+      <button id="successCloseBtn" class="btn btn-primary btn-block">
+        Seguir Comprando
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-brand">
+        <a href="#" class="brand-logo footer-logo">
+          <img src="logo-icon.png" alt="StyleGT Logo" class="brand-logo-img footer-logo-img">
+          <span class="brand-name">StyleGT</span>
+        </a>
+        <p class="footer-tagline">
+          Prendas atemporales creadas con enfoque minimalista y materias primas de primera categoría.
+        </p>
+      </div>
+
+      <div class="footer-links-col">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="#catalogo">Catálogo Completo</a></li>
+          <li><a href="#destacados">Lo Nuevo</a></li>
+          <li><a href="#nosotros">Filosofía</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <h4>Atención al Cliente</h4>
+        <ul>
+          <li><a href="#catalogo">Guía de Tallas</a></li>
+          <li><a href="#catalogo">Políticas de Envío</a></li>
+          <li><a href="#catalogo">Preguntas Frecuentes</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <h4>Conexión Segura</h4>
+        <div class="db-status-badge">
+          <span class="status-indicator"></span>
+          <span>Supabase Conectado</span>
+        </div>
+        <p class="footer-small">Sincronización en tiempo real de inventario y pedidos.</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <p>© 2026 StyleGT. Todos los derechos reservados.</p>
+        <p class="footer-signature">Desarrollado con HTML5, CSS3, JS Vanilla & Supabase</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main JavaScript App -->
+  <script src="app.js"></script>
+</body>
+</html>
