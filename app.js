@@ -1054,8 +1054,8 @@
   /* ==========================================================================
      11. Admin Panel Functions (Live Supabase Management)
      ========================================================================== */
-  // SHA-256 hash de la clave de acceso para no exponer texto plano en código
-  const ADMIN_PASS_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
+  // SHA-256 hash exacto de 'stylegt2026'
+  const ADMIN_PASS_HASH = "9de23c2a72d7353d43135433f26629580325cdbc743e36160d81666eca6f5922";
 
   async function sha256(message) {
     const msgBuffer = new TextEncoder().encode(message);
