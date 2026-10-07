@@ -133,6 +133,16 @@ button {
 .icon-lg { width: 28px; height: 28px; }
 .icon-xl { width: 44px; height: 44px; }
 
+/* Evitar que el navegador intercepte el toque en el icono en vez del boton */
+button i, button svg,
+a i, a svg,
+.btn i, .btn svg,
+.nav-icon-btn i, .nav-icon-btn svg,
+.cart-trigger-btn i, .cart-trigger-btn svg {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
 .section-title {
   font-size: 2rem;
   font-weight: 700;

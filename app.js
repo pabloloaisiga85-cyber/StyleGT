@@ -1383,14 +1383,20 @@
         </td>
       `;
 
-      tr.querySelector('.edit-prod-btn').addEventListener('click', () => {
+      tr.querySelector('.edit-prod-btn').addEventListener('click', (e) => {
+        e.preventDefault();
         openAdminEditProduct(prod);
       });
 
       DOM.adminProductsTbody.appendChild(tr);
     });
 
-    if (window.lucide) window.lucide.createIcons();
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      // Solo transformar elementos que aun tengan data-lucide y no hayan sido convertidos
+      window.lucide.createIcons({
+        root: DOM.adminProductsTbody
+      });
+    }
   }
 
   async function openAdminEditProduct(product) {
@@ -1414,7 +1420,11 @@
       DOM.adminVariantsList.innerHTML = '<span style="color:#ef4444; font-size:0.8rem;">Error al cargar variantes.</span>';
     }
 
-    if (window.lucide) window.lucide.createIcons();
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons({
+        root: DOM.adminEditProductPanel
+      });
+    }
   }
 
   function renderAdminVariantsEditor(variants) {
