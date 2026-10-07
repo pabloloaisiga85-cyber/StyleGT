@@ -9,7 +9,7 @@
   /* ==========================================================================
      1. Supabase Client Configuration
      ========================================================================== */
-  const SUPABASE_URL = "https://yygmdjfvpnpsmjaqbqp.supabase.co";
+  const SUPABASE_URL = "https://yygmdjfvpvnpsmjaqbqp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5Z21kamZ2cHZucHNtamFxYnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzODQwNDIsImV4cCI6MjEwNjk2MDA0Mn0.aOCdU2wgjxzeilIvBeaMmrzHj4gHl21FvPH_4_ltNfg";
 
   if (!window.supabase) {
