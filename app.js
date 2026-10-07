@@ -126,7 +126,33 @@
     successCloseBtn: document.getElementById('successCloseBtn'),
 
     // Toasts
-    toastContainer: document.getElementById('toastContainer')
+    toastContainer: document.getElementById('toastContainer'),
+
+    // Admin Dashboard
+    openAdminBtn: document.getElementById('openAdminBtn'),
+    adminModal: document.getElementById('adminModal'),
+    closeAdminModalBtn: document.getElementById('closeAdminModalBtn'),
+    adminAuthScreen: document.getElementById('adminAuthScreen'),
+    adminLoginForm: document.getElementById('adminLoginForm'),
+    adminPassInput: document.getElementById('adminPassInput'),
+    adminDashboardContent: document.getElementById('adminDashboardContent'),
+    adminRefreshBtn: document.getElementById('adminRefreshBtn'),
+    adminLogoutBtn: document.getElementById('adminLogoutBtn'),
+    adminProductsTbody: document.getElementById('adminProductsTbody'),
+    adminEditProductPanel: document.getElementById('adminEditProductPanel'),
+    adminCancelEditBtn: document.getElementById('adminCancelEditBtn'),
+    adminCancelBtn: document.getElementById('adminCancelBtn'),
+    adminEditProductForm: document.getElementById('adminEditProductForm'),
+    editProductId: document.getElementById('editProductId'),
+    editProductName: document.getElementById('editProductName'),
+    editProductPrice: document.getElementById('editProductPrice'),
+    editProductImgUrl: document.getElementById('editProductImgUrl'),
+    editProductImgPreview: document.getElementById('editProductImgPreview'),
+    editProductDesc: document.getElementById('editProductDesc'),
+    adminVariantsList: document.getElementById('adminVariantsList'),
+    adminSaveProductBtn: document.getElementById('adminSaveProductBtn'),
+    adminSaveBtnText: document.getElementById('adminSaveBtnText'),
+    adminSaveSpinner: document.getElementById('adminSaveSpinner')
   };
 
   /* ==========================================================================
@@ -943,7 +969,8 @@
     // Escape Key to close open modals
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        if (DOM.checkoutModal.classList.contains('open')) closeCheckoutModal();
+        if (DOM.adminModal && DOM.adminModal.classList.contains('open')) closeAdminModal();
+        else if (DOM.checkoutModal.classList.contains('open')) closeCheckoutModal();
         else if (DOM.productModal.classList.contains('open')) closeProductModal();
         else if (DOM.cartDrawer.classList.contains('open')) closeCartDrawer();
         else if (DOM.successModal.classList.contains('open')) closeSuccessModal();
@@ -964,11 +991,9 @@
               url: window.location.href
             });
           } catch (err) {
-            // User cancelled or browser blocked — not an error worth surfacing
             if (err.name !== 'AbortError') console.warn('Share failed:', err);
           }
         } else {
-          // Fallback: copy URL to clipboard
           try {
             await navigator.clipboard.writeText(window.location.href);
             showToast('Enlace copiado al portapapeles', 'success');
@@ -978,10 +1003,265 @@
         }
       });
     }
+
+    // ==========================================
+    // Admin Dashboard Event Listeners
+    // ==========================================
+    if (DOM.openAdminBtn) {
+      DOM.openAdminBtn.addEventListener('click', openAdminModal);
+    }
+    if (DOM.closeAdminModalBtn) {
+      DOM.closeAdminModalBtn.addEventListener('click', closeAdminModal);
+    }
+    if (DOM.adminModal) {
+      DOM.adminModal.addEventListener('click', (e) => {
+        if (e.target === DOM.adminModal) closeAdminModal();
+      });
+    }
+
+    if (DOM.adminLoginForm) {
+      DOM.adminLoginForm.addEventListener('submit', handleAdminLogin);
+    }
+    if (DOM.adminLogoutBtn) {
+      DOM.adminLogoutBtn.addEventListener('click', handleAdminLogout);
+    }
+    if (DOM.adminRefreshBtn) {
+      DOM.adminRefreshBtn.addEventListener('click', async () => {
+        await fetchProducts();
+        renderAdminProductsList();
+        showToast('Catálogo actualizado desde Supabase', 'success');
+      });
+    }
+
+    if (DOM.adminCancelEditBtn) {
+      DOM.adminCancelEditBtn.addEventListener('click', closeAdminEditPanel);
+    }
+    if (DOM.adminCancelBtn) {
+      DOM.adminCancelBtn.addEventListener('click', closeAdminEditPanel);
+    }
+
+    if (DOM.editProductImgUrl) {
+      DOM.editProductImgUrl.addEventListener('input', (e) => {
+        DOM.editProductImgPreview.src = e.target.value.trim();
+      });
+    }
+
+    if (DOM.adminEditProductForm) {
+      DOM.adminEditProductForm.addEventListener('submit', handleAdminProductSave);
+    }
   }
 
   /* ==========================================================================
-     11. Initialize Application
+     11. Admin Panel Functions (Live Supabase Management)
+     ========================================================================== */
+  const ADMIN_PASSWORD_HASH = "stylegt2026"; // Clave segura por defecto
+
+  function openAdminModal() {
+    const isAuthed = sessionStorage.getItem('stylegt_admin_auth') === 'true';
+    if (isAuthed) {
+      showAdminDashboard();
+    } else {
+      showAdminAuth();
+    }
+    DOM.adminModal.classList.add('open');
+    DOM.adminModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function closeAdminModal() {
+    DOM.adminModal.classList.remove('open');
+    DOM.adminModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function showAdminAuth() {
+    DOM.adminAuthScreen.style.display = 'block';
+    DOM.adminDashboardContent.style.display = 'none';
+    DOM.adminPassInput.value = '';
+    DOM.adminPassInput.focus();
+  }
+
+  function showAdminDashboard() {
+    DOM.adminAuthScreen.style.display = 'none';
+    DOM.adminDashboardContent.style.display = 'block';
+    renderAdminProductsList();
+    closeAdminEditPanel();
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function handleAdminLogin(e) {
+    e.preventDefault();
+    const pass = DOM.adminPassInput.value.trim();
+    if (pass === ADMIN_PASSWORD_HASH) {
+      sessionStorage.setItem('stylegt_admin_auth', 'true');
+      showToast('Bienvenido al Panel de Administración', 'success');
+      showAdminDashboard();
+    } else {
+      showToast('Contraseña incorrecta. Intenta nuevamente.', 'error');
+      DOM.adminPassInput.value = '';
+      DOM.adminPassInput.focus();
+    }
+  }
+
+  function handleAdminLogout() {
+    sessionStorage.removeItem('stylegt_admin_auth');
+    showToast('Sesión de administrador cerrada', 'info');
+    showAdminAuth();
+  }
+
+  function renderAdminProductsList() {
+    if (!DOM.adminProductsTbody) return;
+    DOM.adminProductsTbody.innerHTML = '';
+
+    state.products.forEach(prod => {
+      const tr = document.createElement('tr');
+      const cat = state.categories.find(c => c.id === prod.categoria_id);
+      const catName = cat ? cat.nombre : 'Colección';
+
+      tr.innerHTML = `
+        <td>
+          <img src="${escapeHTML(prod.imagen_url)}" alt="${escapeHTML(prod.nombre)}" class="admin-prod-thumb" onerror="this.src='https://placehold.co/44x52?text=Item'">
+        </td>
+        <td>
+          <div class="admin-prod-name">${escapeHTML(prod.nombre)}</div>
+          <div class="admin-prod-cat">${escapeHTML(catName)}</div>
+        </td>
+        <td style="font-weight: 700;">${formatMoney(prod.precio)}</td>
+        <td>
+          <span class="stock-dot in-stock"></span> Activo
+        </td>
+        <td>
+          <button type="button" class="btn btn-outline btn-sm edit-prod-btn" data-id="${prod.id}">
+            <i data-lucide="edit-2" class="icon-xs"></i>
+            <span>Editar</span>
+          </button>
+        </td>
+      `;
+
+      tr.querySelector('.edit-prod-btn').addEventListener('click', () => {
+        openAdminEditProduct(prod);
+      });
+
+      DOM.adminProductsTbody.appendChild(tr);
+    });
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  async function openAdminEditProduct(product) {
+    DOM.editProductId.value = product.id;
+    DOM.editProductName.value = product.nombre;
+    DOM.editProductPrice.value = Number(product.precio);
+    DOM.editProductImgUrl.value = product.imagen_url;
+    DOM.editProductImgPreview.src = product.imagen_url;
+    DOM.editProductDesc.value = product.descripcion || '';
+
+    // Cargar variantes actuales para edición de stock
+    DOM.adminVariantsList.innerHTML = '<span style="font-size:0.8rem; color:#888;">Cargando inventario...</span>';
+    DOM.adminEditProductPanel.style.display = 'block';
+    DOM.adminEditProductPanel.scrollIntoView({ behavior: 'smooth' });
+
+    try {
+      const variants = await fetchVariantsForProduct(product.id);
+      renderAdminVariantsEditor(variants);
+    } catch (err) {
+      console.error(err);
+      DOM.adminVariantsList.innerHTML = '<span style="color:#ef4444; font-size:0.8rem;">Error al cargar variantes.</span>';
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function renderAdminVariantsEditor(variants) {
+    DOM.adminVariantsList.innerHTML = '';
+    if (!variants || variants.length === 0) {
+      DOM.adminVariantsList.innerHTML = '<span style="font-size:0.8rem; color:#888;">Este producto no tiene variantes registradas.</span>';
+      return;
+    }
+
+    variants.forEach(v => {
+      const div = document.createElement('div');
+      div.className = 'admin-variant-row';
+      div.innerHTML = `
+        <span class="variant-meta">${escapeHTML(v.color)} / ${escapeHTML(v.talla)}</span>
+        <div style="display:flex; align-items:center; gap:0.35rem;">
+          <label style="font-size:0.75rem; color:#888;">Stock:</label>
+          <input type="number" min="0" class="variant-stock-input" data-variant-id="${v.id}" value="${v.stock}">
+        </div>
+      `;
+      DOM.adminVariantsList.appendChild(div);
+    });
+  }
+
+  function closeAdminEditPanel() {
+    if (DOM.adminEditProductPanel) {
+      DOM.adminEditProductPanel.style.display = 'none';
+    }
+  }
+
+  async function handleAdminProductSave(e) {
+    e.preventDefault();
+    const prodId = DOM.editProductId.value;
+    const nuevoNombre = DOM.editProductName.value.trim();
+    const nuevoPrecio = parseFloat(DOM.editProductPrice.value);
+    const nuevaImg = DOM.editProductImgUrl.value.trim();
+    const nuevaDesc = DOM.editProductDesc.value.trim();
+
+    if (!nuevoNombre || isNaN(nuevoPrecio) || !nuevaImg) {
+      showToast('Por favor completa todos los campos requeridos', 'error');
+      return;
+    }
+
+    DOM.adminSaveProductBtn.disabled = true;
+    DOM.adminSaveBtnText.style.display = 'none';
+    DOM.adminSaveSpinner.style.display = 'block';
+
+    try {
+      // 1. Actualizar el producto en Supabase directamente
+      const { error: prodError } = await supabase
+        .from('productos')
+        .update({
+          nombre: nuevoNombre,
+          precio: nuevoPrecio,
+          imagen_url: nuevaImg,
+          descripcion: nuevaDesc
+        })
+        .eq('id', prodId);
+
+      if (prodError) throw prodError;
+
+      // 2. Actualizar stocks de cada variante
+      const stockInputs = DOM.adminVariantsList.querySelectorAll('.variant-stock-input');
+      for (const input of stockInputs) {
+        const variantId = input.getAttribute('data-variant-id');
+        const nuevoStock = parseInt(input.value, 10) || 0;
+
+        await supabase
+          .from('variantes_producto')
+          .update({ stock: nuevoStock })
+          .eq('id', variantId);
+      }
+
+      showToast('¡Producto e inventario actualizados con éxito en Supabase!', 'success');
+
+      // 3. Refrescar catálogo local para reflejar los cambios en vivo en la tienda
+      await fetchProducts();
+      renderAdminProductsList();
+      closeAdminEditPanel();
+
+    } catch (err) {
+      console.error('Error al actualizar en Supabase:', err);
+      showToast('Error al guardar en Supabase: ' + (err.message || 'Intenta de nuevo'), 'error');
+    } finally {
+      DOM.adminSaveProductBtn.disabled = false;
+      DOM.adminSaveBtnText.style.display = 'inline';
+      DOM.adminSaveSpinner.style.display = 'none';
+    }
+  }
+
+  /* ==========================================================================
+     12. Initialize Application
      ========================================================================== */
   async function init() {
     updateCartUI();

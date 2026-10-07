@@ -55,6 +55,11 @@
           </button>
         </div>
 
+        <!-- Admin Portal Trigger -->
+        <button id="openAdminBtn" class="nav-icon-btn" aria-label="Panel de Administración" title="Acceso de Administración">
+          <i data-lucide="shield-check" class="icon-sm"></i>
+        </button>
+
         <!-- Cart Button -->
         <button id="openCartBtn" class="cart-trigger-btn" aria-label="Abrir carrito">
           <i data-lucide="shopping-bag" class="icon-md"></i>
@@ -462,6 +467,130 @@
       <button id="successCloseBtn" class="btn btn-primary btn-block">
         Seguir Comprando
       </button>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard Modal -->
+  <div class="modal-backdrop" id="adminModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card modal-xl admin-card">
+      <button class="modal-close-btn" id="closeAdminModalBtn" aria-label="Cerrar panel de administración">
+        <i data-lucide="x" class="icon-md"></i>
+      </button>
+
+      <!-- Admin View 1: Auth Screen -->
+      <div id="adminAuthScreen" class="admin-auth-screen">
+        <div class="admin-auth-header">
+          <div class="admin-shield-icon">
+            <i data-lucide="lock" class="icon-lg"></i>
+          </div>
+          <h2 class="admin-title">Panel de Control StyleGT</h2>
+          <p class="admin-subtitle">Ingresa la clave de administrador para gestionar productos e inventario.</p>
+        </div>
+        <form id="adminLoginForm" class="admin-login-form">
+          <div class="form-group">
+            <label for="adminPassInput" class="form-label">Contraseña de Administrador</label>
+            <div class="input-with-icon">
+              <i data-lucide="key" class="input-icon"></i>
+              <input type="password" id="adminPassInput" class="form-input" placeholder="Introduce tu clave..." required autocomplete="current-password">
+            </div>
+            <p class="form-hint">Clave por defecto: <code>stylegt2026</code> (la puedes cambiar cuando quieras)</p>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
+            <span>Acceder al Panel</span>
+            <i data-lucide="arrow-right" class="icon-sm"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- Admin View 2: Dashboard Content -->
+      <div id="adminDashboardContent" class="admin-dashboard-content" style="display: none;">
+        <div class="admin-header-row">
+          <div>
+            <h2 class="admin-title">Gestión de Catálogo & Productos</h2>
+            <p class="admin-subtitle">Los cambios se guardan y reflejan al instante en tu base de datos Supabase.</p>
+          </div>
+          <div class="admin-header-actions">
+            <button id="adminRefreshBtn" class="btn btn-outline btn-sm" title="Recargar catálogo">
+              <i data-lucide="refresh-cw" class="icon-xs"></i>
+              <span>Recargar</span>
+            </button>
+            <button id="adminLogoutBtn" class="btn btn-outline-danger btn-sm" title="Cerrar Sesión">
+              <i data-lucide="log-out" class="icon-xs"></i>
+              <span>Salir</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Products List in Admin -->
+        <div class="admin-products-table-wrapper">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="adminProductsTbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Edit Product Form Panel -->
+        <div id="adminEditProductPanel" class="admin-edit-panel" style="display: none;">
+          <div class="admin-edit-header">
+            <h3 class="admin-edit-title">Editar Producto</h3>
+            <button id="adminCancelEditBtn" class="btn-text-muted">Cancelar</button>
+          </div>
+          <form id="adminEditProductForm">
+            <input type="hidden" id="editProductId">
+            <div class="admin-edit-grid">
+              <div class="form-group">
+                <label class="form-label" for="editProductName">Nombre del Producto</label>
+                <input type="text" id="editProductName" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="editProductPrice">Precio ($ USD)</label>
+                <input type="number" step="0.01" id="editProductPrice" class="form-input" required>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label" for="editProductImgUrl">URL de la Imagen (pega un link de foto)</label>
+                <div class="input-with-preview">
+                  <input type="url" id="editProductImgUrl" class="form-input" required placeholder="https://images.unsplash.com/...">
+                  <img id="editProductImgPreview" class="edit-img-preview" src="" alt="Vista previa" onerror="this.src='https://placehold.co/100x100?text=Sin+Foto'">
+                </div>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label" for="editProductDesc">Descripción Comercial</label>
+                <textarea id="editProductDesc" class="form-input form-textarea" rows="2"></textarea>
+              </div>
+            </div>
+
+            <!-- Variantes & Stock Editor -->
+            <div class="admin-variants-editor">
+              <div class="admin-variants-header">
+                <h4 class="admin-variants-title">Inventario & Stock por Variantes</h4>
+                <span class="admin-variants-hint">Edita el stock directamente para cada combinación de talla/color</span>
+              </div>
+              <div id="adminVariantsList" class="admin-variants-list">
+                <!-- Variant inputs rendered dynamically -->
+              </div>
+            </div>
+
+            <div class="admin-form-actions">
+              <button type="button" id="adminCancelBtn" class="btn btn-outline">Cancelar</button>
+              <button type="submit" id="adminSaveProductBtn" class="btn btn-primary">
+                <i data-lucide="save" class="icon-sm"></i>
+                <span id="adminSaveBtnText">Guardar en Supabase</span>
+                <div id="adminSaveSpinner" class="spinner" style="display: none;"></div>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 
