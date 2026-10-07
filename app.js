@@ -492,10 +492,10 @@
     if (heroCarouselTimer) clearInterval(heroCarouselTimer);
     heroCarouselTimer = setInterval(() => {
       nextHeroSlide();
-    }, 4500); // Se desliza suavemente cada 4.5 segundos
+    }, 4000); // 4 segundos
   }
 
-  // Pausar rotación si el usuario pone el mouse encima para ver bien la prenda
+  // Pausar rotación en desktop cuando el cursor está encima
   if (DOM.heroCarouselWrapper) {
     DOM.heroCarouselWrapper.addEventListener('mouseenter', () => {
       if (heroCarouselTimer) clearInterval(heroCarouselTimer);
@@ -503,6 +503,33 @@
     DOM.heroCarouselWrapper.addEventListener('mouseleave', () => {
       startHeroCarouselAutoPlay();
     });
+
+    // Soporte táctil nativo para celulares (Deslizar con el dedo / Swipe)
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let touchStartTime = 0;
+
+    DOM.heroCarouselWrapper.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartTime = Date.now();
+      if (heroCarouselTimer) clearInterval(heroCarouselTimer);
+    }, { passive: true });
+
+    DOM.heroCarouselWrapper.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const diffX = touchEndX - touchStartX;
+      const timeDiff = Date.now() - touchStartTime;
+
+      // Si deslizó con el dedo más de 40px hacia los lados
+      if (Math.abs(diffX) > 40 && timeDiff < 600) {
+        if (diffX < 0) {
+          nextHeroSlide(); // Deslizó a la izquierda -> siguiente
+        } else {
+          prevHeroSlide(); // Deslizó a la derecha -> anterior
+        }
+      }
+      startHeroCarouselAutoPlay();
+    }, { passive: true });
   }
 
   if (DOM.heroCarouselNextBtn) {
