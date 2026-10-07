@@ -86,11 +86,37 @@
         </div>
       </div>
       <div class="hero-visual">
-        <div class="hero-image-wrapper">
-          <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1000&auto=format&fit=crop&q=80" alt="Colección StyleGT" class="hero-img" fetchpriority="high" loading="eager">
+        <div class="hero-carousel-wrapper" id="heroCarouselWrapper">
+          <!-- Slider Track -->
+          <div class="hero-carousel-track" id="heroCarouselTrack">
+            <!-- Dynamic slides populated from Supabase products -->
+            <div class="hero-slide active">
+              <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1000&auto=format&fit=crop&q=80" alt="Colección StyleGT" class="hero-img" fetchpriority="high" loading="eager">
+              <div class="hero-slide-overlay">
+                <span class="hero-slide-tag">Destacado</span>
+                <h3 class="hero-slide-title">Colección Esencial 2026</h3>
+                <span class="hero-slide-action">Ver prendas <i data-lucide="arrow-right" class="icon-xs"></i></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carousel Controls -->
+          <button class="hero-carousel-btn prev-btn" id="heroCarouselPrevBtn" aria-label="Imagen anterior">
+            <i data-lucide="chevron-left" class="icon-sm"></i>
+          </button>
+          <button class="hero-carousel-btn next-btn" id="heroCarouselNextBtn" aria-label="Siguiente imagen">
+            <i data-lucide="chevron-right" class="icon-sm"></i>
+          </button>
+
+          <!-- Carousel Indicators / Dots -->
+          <div class="hero-carousel-dots" id="heroCarouselDots">
+            <!-- Dots generated dynamically -->
+          </div>
+
+          <!-- Floating Badge -->
           <div class="hero-badge">
             <span class="badge-dot"></span>
-            <span>Nueva Colección Disponible</span>
+            <span id="heroBadgeText">Pasarela en Vivo</span>
           </div>
         </div>
       </div>

@@ -72,6 +72,13 @@
     emptyState: document.getElementById('emptyState'),
     resetFiltersBtn: document.getElementById('resetFiltersBtn'),
 
+    // Hero Carousel Pasarela
+    heroCarouselWrapper: document.getElementById('heroCarouselWrapper'),
+    heroCarouselTrack: document.getElementById('heroCarouselTrack'),
+    heroCarouselPrevBtn: document.getElementById('heroCarouselPrevBtn'),
+    heroCarouselNextBtn: document.getElementById('heroCarouselNextBtn'),
+    heroCarouselDots: document.getElementById('heroCarouselDots'),
+
     // Cart Badges & Triggers
     openCartBtn: document.getElementById('openCartBtn'),
     cartCountBadge: document.getElementById('cartCountBadge'),
@@ -232,6 +239,7 @@
       if (error) throw error;
       state.products = data || [];
       renderProducts();
+      renderHeroCarousel();
     } catch (err) {
       console.error('Error fetching productos:', err);
       showToast('Error de conexión al cargar el catálogo', 'error');
@@ -383,6 +391,132 @@
     });
 
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  /* ==========================================================================
+     6.1 Hero Live Product Carousel (Pasarela Dinámica)
+     ========================================================================== */
+  let heroCarouselTimer = null;
+  let currentHeroSlideIndex = 0;
+  let heroCarouselProducts = [];
+
+  function renderHeroCarousel() {
+    if (!DOM.heroCarouselTrack || !state.products || state.products.length === 0) return;
+
+    // Tomar todos los productos activos con imagen válida
+    heroCarouselProducts = state.products.filter(p => p.imagen_url && p.activo !== false);
+    if (heroCarouselProducts.length === 0) return;
+
+    DOM.heroCarouselTrack.innerHTML = '';
+    if (DOM.heroCarouselDots) DOM.heroCarouselDots.innerHTML = '';
+
+    heroCarouselProducts.forEach((product, idx) => {
+      const slide = document.createElement('div');
+      slide.className = `hero-slide ${idx === 0 ? 'active' : ''}`;
+      slide.setAttribute('data-product-id', product.id);
+
+      const catName = (product.categorias && product.categorias.nombre) 
+        ? product.categorias.nombre 
+        : 'Colección 2026';
+
+      slide.innerHTML = `
+        <img 
+          src="${escapeHTML(product.imagen_url)}" 
+          alt="${escapeHTML(product.nombre)}" 
+          class="hero-img"
+          ${idx === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'}
+        >
+        <div class="hero-slide-overlay">
+          <span class="hero-slide-tag">${escapeHTML(catName)}</span>
+          <h3 class="hero-slide-title">${escapeHTML(product.nombre)}</h3>
+          <span class="hero-slide-action">Ver prenda y comprar (${formatMoney(product.precio)}) <i data-lucide="arrow-right" class="icon-xs"></i></span>
+        </div>
+      `;
+
+      // Al tocar la diapositiva en la pasarela, abre el modal de ese producto exacto
+      slide.addEventListener('click', (e) => {
+        // Evitar disparar si se tocó un botón de anterior/siguiente
+        if (e.target.closest('.hero-carousel-btn') || e.target.closest('.hero-carousel-dots')) return;
+        openProductModal(product);
+      });
+
+      DOM.heroCarouselTrack.appendChild(slide);
+
+      // Crear dot indicador
+      if (DOM.heroCarouselDots) {
+        const dot = document.createElement('span');
+        dot.className = `hero-dot ${idx === 0 ? 'active' : ''}`;
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          goToHeroSlide(idx);
+        });
+        DOM.heroCarouselDots.appendChild(dot);
+      }
+    });
+
+    currentHeroSlideIndex = 0;
+    startHeroCarouselAutoPlay();
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function goToHeroSlide(newIndex) {
+    if (!heroCarouselProducts || heroCarouselProducts.length === 0) return;
+
+    const slides = DOM.heroCarouselTrack.querySelectorAll('.hero-slide');
+    const dots = DOM.heroCarouselDots ? DOM.heroCarouselDots.querySelectorAll('.hero-dot') : [];
+
+    if (slides.length === 0) return;
+
+    slides[currentHeroSlideIndex]?.classList.remove('active');
+    dots[currentHeroSlideIndex]?.classList.remove('active');
+
+    currentHeroSlideIndex = (newIndex + slides.length) % slides.length;
+
+    slides[currentHeroSlideIndex]?.classList.add('active');
+    dots[currentHeroSlideIndex]?.classList.add('active');
+
+    // Reiniciar temporizador para no cambiar inmediatamente después del clic del usuario
+    startHeroCarouselAutoPlay();
+  }
+
+  function nextHeroSlide() {
+    goToHeroSlide(currentHeroSlideIndex + 1);
+  }
+
+  function prevHeroSlide() {
+    goToHeroSlide(currentHeroSlideIndex - 1);
+  }
+
+  function startHeroCarouselAutoPlay() {
+    if (heroCarouselTimer) clearInterval(heroCarouselTimer);
+    heroCarouselTimer = setInterval(() => {
+      nextHeroSlide();
+    }, 4500); // Se desliza suavemente cada 4.5 segundos
+  }
+
+  // Pausar rotación si el usuario pone el mouse encima para ver bien la prenda
+  if (DOM.heroCarouselWrapper) {
+    DOM.heroCarouselWrapper.addEventListener('mouseenter', () => {
+      if (heroCarouselTimer) clearInterval(heroCarouselTimer);
+    });
+    DOM.heroCarouselWrapper.addEventListener('mouseleave', () => {
+      startHeroCarouselAutoPlay();
+    });
+  }
+
+  if (DOM.heroCarouselNextBtn) {
+    DOM.heroCarouselNextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      nextHeroSlide();
+    });
+  }
+
+  if (DOM.heroCarouselPrevBtn) {
+    DOM.heroCarouselPrevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      prevHeroSlide();
+    });
   }
 
   /* ==========================================================================
