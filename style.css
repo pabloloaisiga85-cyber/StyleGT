@@ -2358,17 +2358,90 @@ button {
 
 @media (max-width: 480px) {
   .navbar-container {
-    padding: 0 1rem;
+    padding: 0 0.85rem;
+    gap: 0.5rem;
+  }
+  .brand-name {
+    font-size: 1.25rem;
+  }
+  .brand-logo-img {
+    height: 34px;
+  }
+  .nav-actions {
+    gap: 0.45rem;
   }
   .search-box {
-    width: 140px;
-    padding: 0.35rem 0.65rem;
+    width: 110px;
+    padding: 0.35rem 0.55rem;
   }
   .search-box:focus-within {
-    width: 155px;
+    width: 140px;
+  }
+  .search-box input {
+    font-size: 0.75rem;
+  }
+  .nav-icon-btn, .cart-trigger-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .hero-section {
+    padding: 2rem 0 2.5rem;
+  }
+  .hero-container {
+    gap: 1.75rem;
   }
   .hero-title {
     font-size: 1.85rem;
+  }
+  /* Pasarela estilizada para móviles: más vertical para ver la prenda completa sin taparla */
+  .hero-carousel-wrapper {
+    aspect-ratio: 1 / 1.15;
+    border-radius: var(--radius-md);
+  }
+  .hero-slide img {
+    object-position: center 20%;
+  }
+  /* Cuadrito liquid glass compacto en móviles para no cubrir el producto */
+  .hero-slide-overlay {
+    bottom: 0.75rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: var(--radius-md);
+    gap: 0.15rem;
+  }
+  .hero-slide-tag {
+    font-size: 0.62rem;
+  }
+  .hero-slide-title {
+    font-size: 0.92rem;
+    line-height: 1.2;
+  }
+  .hero-slide-action {
+    font-size: 0.72rem;
+    margin-top: 0.1rem;
+  }
+  .hero-carousel-dots {
+    top: 0.75rem;
+    right: 0.75rem;
+    gap: 0.3rem;
+  }
+  .hero-dot {
+    width: 5px;
+    height: 5px;
+  }
+  .hero-dot.active {
+    width: 16px;
+  }
+  .hero-carousel-btn {
+    width: 32px;
+    height: 32px;
+  }
+  .hero-carousel-btn.prev-btn {
+    left: 0.5rem;
+  }
+  .hero-carousel-btn.next-btn {
+    right: 0.5rem;
   }
   .products-grid {
     grid-template-columns: 1fr;
