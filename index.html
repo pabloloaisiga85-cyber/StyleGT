@@ -19,6 +19,10 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="logo-icon.png">
 
+  <!-- Cropper.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
   <!-- Main Stylesheet (con version para forzar refresco en móviles) -->
   <link rel="stylesheet" href="style.css?v=2.1">
 </head>
@@ -593,10 +597,29 @@
                 <input type="number" step="0.01" id="editProductPrice" class="form-input" required>
               </div>
               <div class="form-group full-width">
-                <label class="form-label" for="editProductImgUrl">URL de la Imagen (pega un link de foto)</label>
-                <div class="input-with-preview">
-                  <input type="url" id="editProductImgUrl" class="form-input" required placeholder="https://images.unsplash.com/...">
-                  <img id="editProductImgPreview" class="edit-img-preview" src="" alt="Vista previa" onerror="this.src='https://placehold.co/100x100?text=Sin+Foto'">
+                <label class="form-label" for="editProductImageFile">Imagen del Producto (Sube o pega una foto)</label>
+                <div class="input-with-preview" style="flex-direction: column; align-items: flex-start; gap: 1rem;">
+                  <input type="hidden" id="editProductImgUrl" required>
+                  
+                  <div style="display: flex; gap: 1rem; width: 100%; align-items: center;">
+                    <input type="file" id="editProductImageFile" accept="image/*" style="display: none;">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('editProductImageFile').click()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border: 1px dashed #cbd5e1; background: #f8fafc; color: #64748b;">
+                      <i data-lucide="upload-cloud"></i> Subir / Pegar Imagen
+                    </button>
+                    <img id="editProductImgPreview" class="edit-img-preview" src="" alt="Vista previa" onerror="this.src='https://placehold.co/100x100?text=Sin+Foto'" style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; flex-shrink: 0;">
+                  </div>
+
+                  <!-- Contenedor del Cropper -->
+                  <div id="cropperContainer" style="display: none; width: 100%; padding: 1rem; background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Ajusta el recorte (formato cuadrado 1:1 recomendado para catálogo)</p>
+                    <div style="max-width: 100%; height: 250px; background: #000; border-radius: 4px; overflow: hidden; margin-bottom: 1rem; display: flex; justify-content: center;">
+                      <img id="cropperImage" src="" style="display: block; max-width: 100%;">
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                      <button type="button" id="btnCancelCrop" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Cancelar</button>
+                      <button type="button" id="btnApplyCrop" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;"><i data-lucide="crop"></i> Aplicar Recorte</button>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="form-group full-width">

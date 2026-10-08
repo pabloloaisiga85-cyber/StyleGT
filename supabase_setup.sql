@@ -197,3 +197,17 @@ INSERT INTO variantes_producto (producto_id, color, talla, stock) VALUES
 (6, 'Negro', 'L', 12),
 (6, 'Beige', 'M', 9),
 (6, 'Beige', 'L', 8);
+
+-- Políticas para permitir actualizar desde el panel de admin
+CREATE POLICY "Actualizacion publica de productos" ON productos FOR UPDATE USING (true);
+CREATE POLICY "Actualizacion publica de variantes" ON variantes_producto FOR UPDATE USING (true);
+
+-- ==============================================================================
+-- 7. Configuración de Storage (Imágenes de Productos)
+-- ==============================================================================
+
+-- Nota: Debes crear manualmente un bucket llamado 'productos' en Supabase Storage y hacerlo Público.
+
+-- Permitir que cualquier usuario (o admin) suba imágenes al bucket 'productos'
+CREATE POLICY "Permitir subida de imagenes publicas" ON storage.objects FOR INSERT TO public WITH CHECK (bucket_id = 'productos');
+CREATE POLICY "Permitir lectura de imagenes" ON storage.objects FOR SELECT TO public USING (bucket_id = 'productos');

@@ -57,6 +57,9 @@
     cart: JSON.parse(localStorage.getItem('stylegt_cart_items') || '[]')
   };
 
+  let cropperInstance = null;
+  let croppedBlobToUpload = null;
+
   /* ==========================================================================
      3. DOM Elements Cache
      ========================================================================== */
@@ -158,6 +161,11 @@
     editProductPrice: document.getElementById('editProductPrice'),
     editProductImgUrl: document.getElementById('editProductImgUrl'),
     editProductImgPreview: document.getElementById('editProductImgPreview'),
+    editProductImageFile: document.getElementById('editProductImageFile'),
+    cropperContainer: document.getElementById('cropperContainer'),
+    cropperImage: document.getElementById('cropperImage'),
+    btnCancelCrop: document.getElementById('btnCancelCrop'),
+    btnApplyCrop: document.getElementById('btnApplyCrop'),
     editProductDesc: document.getElementById('editProductDesc'),
     adminVariantsList: document.getElementById('adminVariantsList'),
     adminSaveProductBtn: document.getElementById('adminSaveProductBtn'),
@@ -1238,6 +1246,62 @@
       });
     }
 
+    if (DOM.editProductImageFile) {
+      DOM.editProductImageFile.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            initCropper(event.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    if (DOM.btnCancelCrop) {
+      DOM.btnCancelCrop.addEventListener('click', () => {
+        destroyCropper();
+      });
+    }
+
+    if (DOM.btnApplyCrop) {
+      DOM.btnApplyCrop.addEventListener('click', () => {
+        if (cropperInstance) {
+          cropperInstance.getCroppedCanvas({
+            width: 800,
+            height: 800
+          }).toBlob((blob) => {
+            croppedBlobToUpload = blob;
+            // Mostrar vista previa
+            const objectUrl = URL.createObjectURL(blob);
+            DOM.editProductImgPreview.src = objectUrl;
+            destroyCropper();
+          }, 'image/jpeg', 0.85);
+        }
+      });
+    }
+
+    // Permitir pegar imágenes
+    document.addEventListener('paste', (e) => {
+      // Solo interceptar si el panel de edición está abierto
+      if (DOM.adminEditProductPanel && DOM.adminEditProductPanel.style.display === 'block') {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let index in items) {
+          const item = items[index];
+          if (item.kind === 'file' && item.type.includes('image/')) {
+            const blob = item.getAsFile();
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              initCropper(event.target.result);
+            };
+            reader.readAsDataURL(blob);
+            break;
+          }
+        }
+      }
+    });
+
     if (DOM.adminEditProductForm) {
       DOM.adminEditProductForm.addEventListener('submit', handleAdminProductSave);
     }
@@ -1399,6 +1463,42 @@
     }
   }
 
+  function initCropper(imageSrc) {
+    if (cropperInstance) {
+      cropperInstance.destroy();
+    }
+    DOM.cropperImage.src = imageSrc;
+    DOM.cropperContainer.style.display = 'block';
+    
+    // Iniciar Cropper.js después de un pequeño retraso para asegurar que la imagen cargó en el DOM
+    setTimeout(() => {
+      cropperInstance = new Cropper(DOM.cropperImage, {
+        aspectRatio: 1, // Cuadrado 1:1
+        viewMode: 1,
+        dragMode: 'move',
+        autoCropArea: 1,
+        restore: false,
+        guides: true,
+        center: true,
+        highlight: false,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+      });
+    }, 50);
+  }
+
+  function destroyCropper() {
+    if (cropperInstance) {
+      cropperInstance.destroy();
+      cropperInstance = null;
+    }
+    DOM.cropperContainer.style.display = 'none';
+    DOM.cropperImage.src = '';
+    DOM.editProductImageFile.value = ''; // Limpiar input file
+  }
+
+
   async function openAdminEditProduct(product) {
     DOM.editProductId.value = product.id;
     DOM.editProductName.value = product.nombre;
@@ -1459,11 +1559,16 @@
     const prodId = DOM.editProductId.value;
     const nuevoNombre = DOM.editProductName.value.trim();
     const nuevoPrecio = parseFloat(DOM.editProductPrice.value);
-    const nuevaImg = DOM.editProductImgUrl.value.trim();
+    let nuevaImg = DOM.editProductImgUrl.value.trim();
     const nuevaDesc = DOM.editProductDesc.value.trim();
 
-    if (!nuevoNombre || isNaN(nuevoPrecio) || !nuevaImg) {
-      showToast('Por favor completa todos los campos requeridos', 'error');
+    if (!nuevoNombre || isNaN(nuevoPrecio)) {
+      showToast('Por favor completa los campos requeridos', 'error');
+      return;
+    }
+
+    if (!nuevaImg && !croppedBlobToUpload) {
+      showToast('Por favor proporciona una imagen', 'error');
       return;
     }
 
@@ -1472,6 +1577,27 @@
     DOM.adminSaveSpinner.style.display = 'block';
 
     try {
+      // 0. Subir imagen recortada si existe
+      if (croppedBlobToUpload) {
+        const fileName = `prod_${prodId}_${Date.now()}.jpg`;
+        const { data, error: uploadError } = await supabase.storage
+          .from('productos')
+          .upload(fileName, croppedBlobToUpload, {
+            contentType: 'image/jpeg',
+            upsert: false
+          });
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: publicUrlData } = supabase.storage
+          .from('productos')
+          .getPublicUrl(fileName);
+          
+        nuevaImg = publicUrlData.publicUrl;
+        croppedBlobToUpload = null; // Limpiar para futuros guardados
+        DOM.editProductImgUrl.value = nuevaImg; // Actualizar campo
+      }
+
       // 1. Actualizar el producto en Supabase directamente
       const { error: prodError } = await supabase
         .from('productos')
