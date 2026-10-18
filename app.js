@@ -93,6 +93,7 @@
     cartEmptyState: document.getElementById('cartEmptyState'),
     cartFooter: document.getElementById('cartFooter'),
     cartSubtotal: document.getElementById('cartSubtotal'),
+    cartShippingText: document.getElementById('cartShippingText'),
     cartTotal: document.getElementById('cartTotal'),
     cartEmptyExploreBtn: document.getElementById('cartEmptyExploreBtn'),
     goToCheckoutBtn: document.getElementById('goToCheckoutBtn'),
@@ -802,8 +803,13 @@
   function getCartTotals() {
     const totalItems = state.cart.reduce((sum, item) => sum + item.cantidad, 0);
     const subtotal = state.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-    const total = subtotal; // Free shipping
-    return { totalItems, subtotal, total };
+
+    // Regla de envío: Gratis a partir de $50, de lo contrario $4.00 (si hay productos)
+    const COSTO_ENVIO_BASE = 4.00;
+    const shipping = (subtotal >= 50 || subtotal === 0) ? 0 : COSTO_ENVIO_BASE;
+    const total = subtotal + shipping;
+
+    return { totalItems, subtotal, shipping, total };
   }
 
   function updateCartUI() {
@@ -819,7 +825,12 @@
     DOM.cartCountBadge.classList.add('bump');
 
     // Totals
+    const { shipping } = getCartTotals();
     DOM.cartSubtotal.textContent = formatMoney(subtotal);
+    if (DOM.cartShippingText) {
+      DOM.cartShippingText.textContent = shipping === 0 ? 'Gratis' : formatMoney(shipping);
+      DOM.cartShippingText.style.color = shipping === 0 ? 'var(--color-success)' : 'inherit';
+    }
     DOM.cartTotal.textContent = formatMoney(total);
 
     // Empty state or Items
