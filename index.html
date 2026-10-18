@@ -115,33 +115,36 @@
           </a>
         </div>
       </div>
+      <!-- Visual / Hero Carousel -->
       <div class="hero-visual">
         <div class="hero-carousel-wrapper" id="heroCarouselWrapper">
           <!-- Slider Track -->
           <div class="hero-carousel-track" id="heroCarouselTrack">
-            <!-- Dynamic slides populated from Supabase products -->
+            <!-- Estado inicial de carga mientras Supabase conecta -->
             <div class="hero-slide active"
-              style="background: #f4f4f5; display: flex; align-items: center; justify-content: center; min-height: 420px;">
+              style="background: #f4f4f5; display: flex; align-items: center; justify-content: center; min-height: 420px; border-radius: 16px;">
               <span
                 style="color: #a1a1aa; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Cargando
                 colección...</span>
             </div>
-
-            <!-- Carousel Controls -->
-            <button class="hero-carousel-btn prev-btn" id="heroCarouselPrevBtn" aria-label="Imagen anterior">
-              <i data-lucide="chevron-left" class="icon-sm"></i>
-            </button>
-            <button class="hero-carousel-btn next-btn" id="heroCarouselNextBtn" aria-label="Siguiente imagen">
-              <i data-lucide="chevron-right" class="icon-sm"></i>
-            </button>
-
-            <!-- Carousel Indicators / Dots -->
-            <div class="hero-carousel-dots" id="heroCarouselDots">
-              <!-- Dots generated dynamically -->
-            </div>
           </div>
+
+          <!-- Carousel Controls (Flechas para Laptop / Desktop) -->
+          <button type="button" class="hero-carousel-btn prev-btn" id="heroCarouselPrevBtn"
+            aria-label="Imagen anterior">
+            <i data-lucide="chevron-left" class="icon-sm"></i>
+          </button>
+          <button type="button" class="hero-carousel-btn next-btn" id="heroCarouselNextBtn"
+            aria-label="Siguiente imagen">
+            <i data-lucide="chevron-right" class="icon-sm"></i>
+          </button>
+
+          <!-- Carousel Dots / Indicadores (Barras superiores en móvil) -->
+          <div class="hero-carousel-dots" id="heroCarouselDots"></div>
         </div>
       </div>
+    </div>
+    </div>
   </section>
 
   <!-- Value Propositions Banner -->
