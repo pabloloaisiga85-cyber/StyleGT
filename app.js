@@ -44,7 +44,7 @@
     activeCategory: 'all',
     searchQuery: '',
     sortBy: 'default',
-    
+
     // Active modal state
     modalProduct: null,
     modalVariants: [],
@@ -184,7 +184,7 @@
   function showToast(message, type = 'normal') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    
+
     let iconName = 'info';
     if (type === 'success') iconName = 'check-circle';
     if (type === 'error') iconName = 'alert-triangle';
@@ -259,14 +259,19 @@
     }
   }
 
-  async function fetchVariantsForProduct(productId) {
+  async function fetchVariantsForProduct(productId, isAdmin = false) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('variantes_producto')
         .select('*')
         .eq('producto_id', productId)
-        .gt('stock', 0);
+        .order('id', { ascending: true });
 
+      if (!isAdmin) {
+        query = query.gt('stock', 0);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     } catch (err) {
@@ -423,8 +428,8 @@
       slide.className = `hero-slide ${idx === 0 ? 'active' : ''}`;
       slide.setAttribute('data-product-id', product.id);
 
-      const catName = (product.categorias && product.categorias.nombre) 
-        ? product.categorias.nombre 
+      const catName = (product.categorias && product.categorias.nombre)
+        ? product.categorias.nombre
         : 'Colección 2026';
 
       slide.innerHTML = `
@@ -622,7 +627,7 @@
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = `color-chip ${color === state.selectedColor ? 'active' : ''}`;
-      
+
       const hexColor = getColorHex(color);
       chip.innerHTML = `
         <span class="color-dot-indicator" style="background-color: ${hexColor};"></span>
@@ -1401,11 +1406,11 @@
 
     // Filtrar según búsqueda y categoría seleccionada
     const filtered = state.products.filter(prod => {
-      const matchesSearch = !adminState.searchQuery || 
+      const matchesSearch = !adminState.searchQuery ||
         prod.nombre.toLowerCase().includes(adminState.searchQuery) ||
         (prod.descripcion && prod.descripcion.toLowerCase().includes(adminState.searchQuery));
 
-      const matchesCat = adminState.categoryFilter === 'all' || 
+      const matchesCat = adminState.categoryFilter === 'all' ||
         String(prod.categoria_id) === String(adminState.categoryFilter);
 
       return matchesSearch && matchesCat;
@@ -1469,7 +1474,7 @@
     }
     DOM.cropperImage.src = imageSrc;
     DOM.cropperContainer.style.display = 'block';
-    
+
     // Iniciar Cropper.js después de un pequeño retraso para asegurar que la imagen cargó en el DOM
     setTimeout(() => {
       cropperInstance = new Cropper(DOM.cropperImage, {
@@ -1513,7 +1518,7 @@
     DOM.adminEditProductPanel.scrollIntoView({ behavior: 'smooth' });
 
     try {
-      const variants = await fetchVariantsForProduct(product.id);
+      const variants = await fetchVariantsForProduct(product.id, true);
       renderAdminVariantsEditor(variants);
     } catch (err) {
       console.error(err);
@@ -1586,13 +1591,13 @@
             contentType: 'image/jpeg',
             upsert: false
           });
-          
+
         if (uploadError) throw uploadError;
-        
+
         const { data: publicUrlData } = supabase.storage
           .from('productos')
           .getPublicUrl(fileName);
-          
+
         nuevaImg = publicUrlData.publicUrl;
         croppedBlobToUpload = null; // Limpiar para futuros guardados
         DOM.editProductImgUrl.value = nuevaImg; // Actualizar campo
