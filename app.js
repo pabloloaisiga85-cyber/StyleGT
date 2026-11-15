@@ -139,6 +139,8 @@
 
     // Success Modal
     successModal: document.getElementById('successModal'),
+    successTitle: document.getElementById('successTitle'),
+    successSubtitle: document.getElementById('successSubtitle'),
     confirmedOrderId: document.getElementById('confirmedOrderId'),
     orderReceiptDetails: document.getElementById('orderReceiptDetails'),
     successCloseBtn: document.getElementById('successCloseBtn'),
@@ -1380,7 +1382,17 @@
   }
 
   function openSuccessModal(order, items) {
+    const isTransfer = order.metodo_pago === 'transferencia';
     DOM.confirmedOrderId.textContent = `#ORD-${order.id}`;
+
+    if (DOM.successTitle) {
+      DOM.successTitle.textContent = isTransfer ? '¡Pedido en Verificación!' : '¡Pedido Confirmado!';
+    }
+    if (DOM.successSubtitle) {
+      DOM.successSubtitle.textContent = isTransfer
+        ? 'Registramos tu pedido y tu comprobante. Verificaremos la transferencia en breve para confirmar tu envío.'
+        : 'Muchas gracias por tu compra. Hemos registrado tu pedido satisfactoriamente en el sistema.';
+    }
 
     // escapeHTML prevents XSS from any user-supplied field
     DOM.orderReceiptDetails.innerHTML = `
@@ -1397,8 +1409,8 @@
         <span>${escapeHTML(order.direccion_envio)}</span>
       </div>
       <div>
-        <span>Total Pagado:</span>
-        <span style="font-weight: 800; color: #111;">${formatMoney(order.total)}</span>
+        <span>${isTransfer ? 'Monto (por verificar):' : 'Total a Pagar:'}</span>
+        <span style="font-weight: 800; color: var(--text-primary, #111);">${formatMoney(order.total)}</span>
       </div>
       <div>
         <span>Prendas ordenadas:</span>
@@ -1406,7 +1418,13 @@
       </div>
       <div>
         <span>Método de pago:</span>
-        <span>${order.metodo_pago === 'transferencia' ? 'Transferencia bancaria' : 'Pago contra entrega'}</span>
+        <span>${isTransfer ? 'Transferencia bancaria' : 'Pago contra entrega'}</span>
+      </div>
+      <div>
+        <span>Estado:</span>
+        <span style="font-weight: 700; color: ${isTransfer ? '#d97706' : '#16a34a'};">
+          ${isTransfer ? 'Pendiente de verificación' : 'Confirmado'}
+        </span>
       </div>
     `;
 
