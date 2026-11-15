@@ -3973,8 +3973,8 @@ html.theme-transitioning * {
 }
 
 [data-theme="dark"] .hero-slide-title,
-[data-theme="dark"] .hero-slide-cta {
-  color: #ffffff;
+[data-theme="dark"] .hero-slide-action {
+  color: #f4f4f5;
   text-shadow: none;
 }
 
