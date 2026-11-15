@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | StyleGT</title>
+  <link rel="icon" type="image/png" href="logo-icon.png">
+
+  <!-- Prevent flash on dark mode load -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('stylegt_theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if ((saved || (prefersDark ? 'dark' : 'light')) === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <link rel="stylesheet" href="admin.css?v=1.0">
+</head>
+
+<body>
+
+  <!-- 1. Auth Screen (Supabase Auth) -->
+  <section id="authView" class="auth-view">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <img src="logo-icon.png" alt="StyleGT" class="brand-logo-img">
+        <span>StyleGT Admin</span>
+      </div>
+      <h1>Iniciar Sesión</h1>
+      <p class="auth-subtitle">Accede con tu usuario administrador de Supabase para gestionar catálogo, inventario y pedidos.</p>
+
+      <form id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label for="loginEmail">Correo electrónico</label>
+          <input type="email" id="loginEmail" class="form-input" placeholder="admin@stylegt.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Contraseña</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <div id="loginError" class="auth-error" style="display: none;"></div>
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">
+          <span>Entrar al Panel</span>
+        </button>
+      </form>
+
+      <a href="index.html" class="back-store-link">
+        <i data-lucide="arrow-left" class="icon-xs"></i>
+        <span>Volver a la tienda</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- 2. Fullscreen Admin Workspace -->
+  <div id="dashboardView" class="admin-shell" style="display: none;">
+    <!-- Sidebar (Desktop) / Top Navigation (Mobile) -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-brand">
+        <img src="logo-icon.png" alt="StyleGT" class="brand-logo-img">
+        <div>
+          <div class="sidebar-brand-name">StyleGT</div>
+          <div class="sidebar-brand-tag">Admin Workspace</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav">
+        <button type="button" class="nav-tab active" data-tab="resumen">
+          <i data-lucide="layout-dashboard" class="icon-sm"></i>
+          <span>Resumen</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="pedidos">
+          <i data-lucide="shopping-bag" class="icon-sm"></i>
+          <span>Pedidos</span>
+          <span id="pendingOrdersBadge" class="tab-badge" style="display: none;">0</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="productos">
+          <i data-lucide="shirt" class="icon-sm"></i>
+          <span>Productos</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="categorias">
+          <i data-lucide="tags" class="icon-sm"></i>
+          <span>Categorías</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="index.html" class="btn btn-secondary btn-sm btn-block">
+          <i data-lucide="external-link" class="icon-xs"></i>
+          <span>Ver Tienda</span>
+        </a>
+        <button type="button" id="logoutBtn" class="btn btn-ghost btn-sm btn-block">
+          <i data-lucide="log-out" class="icon-xs"></i>
+          <span>Cerrar Sesión</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+      <!-- Top Header -->
+      <header class="admin-topbar">
+        <div>
+          <h1 id="topbarTitle" class="topbar-title">Resumen</h1>
+          <p id="topbarSubtitle" class="topbar-subtitle">Estado general de ventas, pedidos e inventario.</p>
+        </div>
+        <div class="topbar-actions">
+          <button type="button" id="refreshDataBtn" class="icon-btn" title="Actualizar datos">
+            <i data-lucide="refresh-cw" class="icon-sm"></i>
+          </button>
+          <button type="button" id="themeToggleBtn" class="icon-btn theme-toggle-btn" title="Cambiar tema">
+            <i data-lucide="sun" class="icon-sm theme-icon-sun"></i>
+            <i data-lucide="moon" class="icon-sm theme-icon-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: Resumen (KPIs + Low Stock) -->
+      <section id="tab-resumen" class="tab-panel active">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Ingresos Totales</span>
+            <strong class="kpi-value" id="kpiRevenue">$0.00</strong>
+            <span class="kpi-hint">Pedidos no cancelados</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Pedidos Pendientes</span>
+            <strong class="kpi-value" id="kpiPending">0</strong>
+            <span class="kpi-hint">Por preparar o enviar</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Productos Activos</span>
+            <strong class="kpi-value" id="kpiProducts">0</strong>
+            <span class="kpi-hint">Visibles en catálogo</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Alertas Stock Bajo</span>
+            <strong class="kpi-value" id="kpiLowStock">0</strong>
+            <span class="kpi-hint">Variantes con ≤ 3 uds</span>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h2>Variantes con Stock Bajo o Agotado</h2>
+            <button type="button" class="btn btn-secondary btn-sm" data-goto-tab="productos">Ir a Productos</button>
+          </div>
+          <div id="lowStockList" class="low-stock-list"></div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Pedidos -->
+      <section id="tab-pedidos" class="tab-panel">
+        <div class="toolbar">
+          <div class="filter-pills" id="orderStatusFilters">
+            <button type="button" class="pill active" data-status="all">Todos</button>
+            <button type="button" class="pill" data-status="pendiente">Pendientes</button>
+            <button type="button" class="pill" data-status="preparando">Preparando</button>
+            <button type="button" class="pill" data-status="enviado">Enviados</button>
+            <button type="button" class="pill" data-status="entregado">Entregados</button>
+            <button type="button" class="pill" data-status="cancelado">Cancelados</button>
+          </div>
+        </div>
+        <div id="ordersList" class="orders-grid"></div>
+      </section>
+
+      <!-- TAB 3: Productos & Variantes -->
+      <section id="tab-productos" class="tab-panel">
+        <div class="toolbar toolbar-between">
+          <div class="toolbar-search-group">
+            <div class="search-input-wrap">
+              <i data-lucide="search" class="icon-sm"></i>
+              <input type="text" id="prodSearchInput" class="form-input" placeholder="Buscar prenda...">
+            </div>
+            <select id="prodCatFilter" class="form-select">
+              <option value="all">Todas las categorías</option>
+            </select>
+          </div>
+          <button type="button" id="newProductBtn" class="btn btn-primary">
+            <i data-lucide="plus" class="icon-sm"></i>
+            <span>Nuevo Producto</span>
+          </button>
+        </div>
+
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Prenda</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 4: Categorías -->
+      <section id="tab-categorias" class="tab-panel">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h2>Nueva Categoría</h2>
+          </div>
+          <form id="newCategoryForm" class="inline-form">
+            <input type="text" id="newCategoryName" class="form-input" placeholder="Ej. Accesorios, Hoodies..." required>
+            <button type="submit" class="btn btn-primary">
+              <i data-lucide="plus" class="icon-sm"></i>
+              <span>Agregar</span>
+            </button>
+          </form>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h2>Categorías Existentes</h2>
+          </div>
+          <div id="categoriesList" class="categories-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Product Create / Edit Modal (Full Featured + Cropper + Variants) -->
+  <div id="productFormModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="productModalTitle">Nuevo Producto</h2>
+        <button type="button" id="closeProductFormModal" class="icon-btn" aria-label="Cerrar">
+          <i data-lucide="x" class="icon-sm"></i>
+        </button>
+      </div>
+
+      <form id="productForm" class="modal-body">
+        <input type="hidden" id="editProductId">
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="prodName">Nombre de la prenda *</label>
+            <input type="text" id="prodName" class="form-input" required placeholder="Ej. Hoodie Heavyweight 380 GSM">
+          </div>
+          <div class="form-group">
+            <label for="prodPrice">Precio (USD) *</label>
+            <input type="number" id="prodPrice" class="form-input" step="0.01" min="0" required placeholder="45.00">
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="prodCategory">Categoría *</label>
+            <select id="prodCategory" class="form-select" required></select>
+          </div>
+          <div class="form-group">
+            <label for="prodActive">Visibilidad en tienda</label>
+            <select id="prodActive" class="form-select">
+              <option value="true">Activo (Visible)</option>
+              <option value="false">Pausado (Oculto)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="prodDesc">Descripción</label>
+          <textarea id="prodDesc" class="form-textarea" rows="2" placeholder="Material, gramaje, corte..."></textarea>
+        </div>
+
+        <!-- Image Upload + Cropper.js -->
+        <div class="form-group">
+          <label>Imagen del producto</label>
+          <div class="image-upload-row">
+            <img id="prodImgPreview" src="" alt="Vista previa" class="prod-img-preview" style="display: none;">
+            <div class="image-upload-controls">
+              <input type="file" id="prodImgFile" accept="image/*" class="form-input">
+              <input type="url" id="prodImgUrl" class="form-input" placeholder="O pega una URL de imagen...">
+            </div>
+          </div>
+          <div id="cropperBox" class="cropper-box" style="display: none;">
+            <img id="cropperImage" src="" alt="Recortar imagen">
+            <div class="cropper-actions">
+              <button type="button" id="applyCropBtn" class="btn btn-primary btn-sm">Aplicar Recorte</button>
+              <button type="button" id="cancelCropBtn" class="btn btn-secondary btn-sm">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Variants Builder -->
+        <div class="variants-section">
+          <div class="variants-header">
+            <h3>Tallas, Colores y Stock</h3>
+            <button type="button" id="addVariantRowBtn" class="btn btn-secondary btn-sm">
+              <i data-lucide="plus" class="icon-xs"></i>
+              <span>Añadir Variante</span>
+            </button>
+          </div>
+          <div id="variantRowsContainer" class="variant-rows-container"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelProductFormBtn" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" id="saveProductSubmitBtn" class="btn btn-primary">Guardar Producto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="admin.js?v=1.0"></script>
+</body>
+
+</html>

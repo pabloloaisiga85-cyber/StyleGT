@@ -1607,7 +1607,9 @@
     // Admin Dashboard Event Listeners
     // ==========================================
     if (DOM.openAdminBtn) {
-      DOM.openAdminBtn.addEventListener('click', openAdminModal);
+      DOM.openAdminBtn.addEventListener('click', () => {
+        window.location.href = 'admin.html';
+      });
     }
     if (DOM.closeAdminModalBtn) {
       DOM.closeAdminModalBtn.addEventListener('click', closeAdminModal);
