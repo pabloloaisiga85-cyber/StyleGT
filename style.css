@@ -2555,9 +2555,11 @@ a i, a svg,
   .search-box input {
     font-size: 0.75rem;
   }
-  .nav-icon-btn, .cart-trigger-btn {
+  .nav-icon-btn, .cart-trigger-btn, .nav-track-btn {
     width: 36px;
     height: 36px;
+    padding: 0;
+    justify-content: center;
   }
   .hero-section {
     padding: 2rem 0 2.5rem;
@@ -4434,6 +4436,8 @@ html.theme-transitioning * {
 
 .track-order-card {
   padding: 1.75rem;
+  max-height: 90dvh;
+  overflow-y: auto;
 }
 
 .track-order-header {
@@ -4472,8 +4476,26 @@ html.theme-transitioning * {
 }
 
 @media (max-width: 560px) {
+  .track-order-card {
+    padding: 1.25rem 1rem;
+  }
   .track-form-grid {
     grid-template-columns: 1fr;
+  }
+  .track-result-card {
+    padding: 0.95rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .nav-actions {
+    gap: 0.35rem;
+  }
+  .search-box {
+    width: 92px;
+  }
+  .search-box:focus-within {
+    width: 118px;
   }
 }
 
@@ -4607,7 +4629,13 @@ html.theme-transitioning * {
 .track-total-row {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.track-item-row > span:last-child,
+.track-total-row > strong {
+  flex-shrink: 0;
 }
 
 .track-total-row {

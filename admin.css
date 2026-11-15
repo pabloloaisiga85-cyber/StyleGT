@@ -368,7 +368,7 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   border-top: 1px solid var(--border);
 }
 .order-total { font-weight: 800; font-size: 1rem; }
-.order-controls { display: flex; align-items: center; gap: 0.45rem; }
+.order-controls { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; justify-content: flex-end; }
 .order-controls .form-select { width: auto; padding: 0.35rem 0.6rem; font-size: 0.8rem; }
 
 /* Low Stock & Categories */
@@ -977,7 +977,29 @@ html, body {
 
   .order-controls {
     width: 100%;
-    justify-content: flex-end;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .order-controls .btn-next-step,
+  .order-controls .order-status-select {
+    flex: 1 1 auto;
+  }
+
+  .receipt-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .receipt-card-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .receipt-card-actions > * {
+    flex: 1 1 auto;
+    text-align: center;
+    justify-content: center;
   }
 
   .image-upload-row {
