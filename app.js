@@ -26,10 +26,9 @@
 
   const STORE_WHATSAPP_NUMBER = '50558378563';
 
-  // Edita aquí tus cuentas bancarias reales para transferencias
   const BANK_ACCOUNTS = [
-    { banco: 'BAC Credomatic (USD / C$)', titular: 'StyleGT', cuenta: '360-000000-0 (Actualizar)' },
-    { banco: 'Banpro / Lafise', titular: 'StyleGT', cuenta: '100-000000-0 (Actualizar)' }
+    { banco: 'Lafise Córdobas', titular: 'Pablo Loaisiga', cuenta: '139069477' },
+    { banco: 'Lafise Dólares', titular: 'Pablo Loaisiga', cuenta: '134268113' }
   ];
 
   /* ==========================================================================
