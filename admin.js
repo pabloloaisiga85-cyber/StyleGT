@@ -298,6 +298,9 @@
         return `<div>${it.cantidad}× <strong>${escapeHTML(prodName)}</strong> (${escapeHTML(talla)} / ${escapeHTML(color)}) — ${formatMoney(it.precio_unitario)}</div>`;
       }).join('');
 
+      const isTransfer = order.metodo_pago === 'transferencia';
+      const isPaid = order.estado_pago === 'pagado';
+
       const card = document.createElement('article');
       card.className = 'order-card';
       card.innerHTML = `
@@ -306,7 +309,12 @@
             <div class="order-id">Pedido #ORD-${order.id}</div>
             <div class="order-date">${escapeHTML(dateStr)}</div>
           </div>
-          <span class="status-badge status-${escapeHTML(order.estado)}">${escapeHTML(order.estado)}</span>
+          <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+            <button type="button" class="status-badge ${isPaid ? 'status-active' : 'status-pendiente'} btn-toggle-paid" title="Clic para cambiar estado de pago">
+              ${isTransfer ? 'Transferencia' : 'Contra entrega'} · ${isPaid ? 'Pagado' : 'Por cobrar'}
+            </button>
+            <span class="status-badge status-${escapeHTML(order.estado)}">${escapeHTML(order.estado)}</span>
+          </div>
         </div>
         <div class="order-customer">
           <div><strong>Cliente:</strong> ${escapeHTML(order.nombre_cliente)}</div>
@@ -326,6 +334,18 @@
           </div>
         </div>
       `;
+
+      card.querySelector('.btn-toggle-paid').addEventListener('click', async () => {
+        const nextPaid = order.estado_pago === 'pagado' ? 'pendiente' : 'pagado';
+        const { error } = await supabase.from('pedidos').update({ estado_pago: nextPaid }).eq('id', order.id);
+        if (error) {
+          showToast('Ejecuta supabase_transferencia.sql en Supabase primero', 'error');
+          return;
+        }
+        order.estado_pago = nextPaid;
+        showToast(`Pago #ORD-${order.id} → ${nextPaid === 'pagado' ? 'Pagado' : 'Por cobrar'}`, 'success');
+        renderOrders();
+      });
 
       card.querySelector('.order-status-select').addEventListener('change', async (e) => {
         const nextStatus = e.target.value;

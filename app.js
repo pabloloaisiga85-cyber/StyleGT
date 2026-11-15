@@ -24,6 +24,14 @@
     return div.innerHTML;
   }
 
+  const STORE_WHATSAPP_NUMBER = '50558378563';
+
+  // Edita aquí tus cuentas bancarias reales para transferencias
+  const BANK_ACCOUNTS = [
+    { banco: 'BAC Credomatic (USD / C$)', titular: 'StyleGT', cuenta: '360-000000-0 (Actualizar)' },
+    { banco: 'Banpro / Lafise', titular: 'StyleGT', cuenta: '100-000000-0 (Actualizar)' }
+  ];
+
   /* ==========================================================================
      1. Supabase Client Configuration
      ========================================================================== */
@@ -165,6 +173,11 @@
     miniCartViewBtn: document.getElementById('miniCartViewBtn'),
     miniCartCheckoutBtn: document.getElementById('miniCartCheckoutBtn'),
     themeToggleBtn: document.getElementById('themeToggleBtn'),
+    paymentMethodGroup: document.getElementById('paymentMethodGroup'),
+    bankTransferBox: document.getElementById('bankTransferBox'),
+    bankAccountsList: document.getElementById('bankAccountsList'),
+    successTransferAction: document.getElementById('successTransferAction'),
+    sendReceiptWhatsAppBtn: document.getElementById('sendReceiptWhatsAppBtn'),
 
     // Admin Dashboard
     openAdminBtn: document.getElementById('openAdminBtn'),
@@ -1269,6 +1282,17 @@
         return;
       }
 
+      const selectedMethodInput = document.querySelector('input[name="metodoPago"]:checked');
+      const metodoPago = selectedMethodInput ? selectedMethodInput.value : 'contra_entrega';
+
+      // Save payment method safely (backward compatible if SQL migration hasn't run yet)
+      try {
+        await supabase.rpc('registrar_metodo_pago', {
+          p_pedido_id: result.id,
+          p_metodo: metodoPago
+        });
+      } catch (_) {}
+
       // Success — build a compatible order object for the success modal
       const placedCart = [...state.cart];
       const pedidoData = {
@@ -1276,7 +1300,8 @@
         nombre_cliente: nombre,
         telefono: telefono,
         direccion_envio: direccion,
-        total: parseFloat(total.toFixed(2))
+        total: parseFloat(total.toFixed(2)),
+        metodo_pago: metodoPago
       };
 
       state.cart = [];
@@ -1352,7 +1377,23 @@
         <span>Prendas ordenadas:</span>
         <span>${items.reduce((s, i) => s + i.cantidad, 0)} piezas</span>
       </div>
+      <div>
+        <span>Método de pago:</span>
+        <span>${order.metodo_pago === 'transferencia' ? 'Transferencia bancaria' : 'Pago contra entrega'}</span>
+      </div>
     `;
+
+    if (DOM.successTransferAction && DOM.sendReceiptWhatsAppBtn) {
+      if (order.metodo_pago === 'transferencia') {
+        const msg = encodeURIComponent(
+          `Hola StyleGT, envío el comprobante de transferencia de mi pedido #ORD-${order.id} a nombre de ${order.nombre_cliente} por ${formatMoney(order.total)}.`
+        );
+        DOM.sendReceiptWhatsAppBtn.href = `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${msg}`;
+        DOM.successTransferAction.style.display = 'block';
+      } else {
+        DOM.successTransferAction.style.display = 'none';
+      }
+    }
 
     DOM.successModal.classList.add('open');
     DOM.successModal.setAttribute('aria-hidden', 'false');
@@ -1474,6 +1515,44 @@
       if (e.target === DOM.checkoutModal) closeCheckoutModal();
     });
     DOM.checkoutForm.addEventListener('submit', handleCheckoutSubmit);
+
+    // Payment Method Selector & Bank Accounts Copy
+    if (DOM.bankAccountsList) {
+      DOM.bankAccountsList.innerHTML = BANK_ACCOUNTS.map((acc, idx) => `
+        <div class="bank-account-row">
+          <div class="bank-account-meta">
+            <div class="bank-account-name">${escapeHTML(acc.banco)} · ${escapeHTML(acc.titular)}</div>
+            <div class="bank-account-num">${escapeHTML(acc.cuenta)}</div>
+          </div>
+          <button type="button" class="btn-copy-account" data-acc-idx="${idx}">Copiar</button>
+        </div>
+      `).join('');
+
+      DOM.bankAccountsList.querySelectorAll('.btn-copy-account').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const acc = BANK_ACCOUNTS[Number(btn.dataset.accIdx)];
+          if (!acc) return;
+          try {
+            await navigator.clipboard.writeText(acc.cuenta);
+            btn.textContent = '¡Copiado!';
+            setTimeout(() => { btn.textContent = 'Copiar'; }, 1600);
+          } catch (_) {
+            showToast(`Cuenta: ${acc.cuenta}`, 'normal');
+          }
+        });
+      });
+    }
+
+    if (DOM.paymentMethodGroup && DOM.bankTransferBox) {
+      DOM.paymentMethodGroup.querySelectorAll('input[name="metodoPago"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          DOM.paymentMethodGroup.querySelectorAll('.payment-option-card').forEach(card => {
+            card.classList.toggle('active', card.querySelector('input').checked);
+          });
+          DOM.bankTransferBox.style.display = radio.value === 'transferencia' ? 'block' : 'none';
+        });
+      });
+    }
 
     // Success Modal Close
     DOM.successCloseBtn.addEventListener('click', closeSuccessModal);
