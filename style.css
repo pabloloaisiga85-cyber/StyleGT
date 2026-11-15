@@ -4401,3 +4401,221 @@ html.theme-transitioning * {
   color: var(--color-success);
   font-weight: 600;
 }
+
+/* ---- Order Tracking Button & Modal ---- */
+.nav-track-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.nav-track-btn:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .nav-track-btn {
+    padding: 0.45rem;
+  }
+  .nav-track-label {
+    display: none;
+  }
+}
+
+.track-order-card {
+  padding: 1.75rem;
+}
+
+.track-order-header {
+  margin-bottom: 1.25rem;
+}
+
+.track-order-header h2 {
+  font-size: 1.45rem;
+  margin: 0.2rem 0 0.35rem;
+}
+
+.track-order-header p {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.track-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  margin-bottom: 0.9rem;
+}
+
+@media (max-width: 560px) {
+  .track-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.track-order-result {
+  margin-top: 1.35rem;
+}
+
+.track-result-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1.15rem;
+}
+
+.track-result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.track-order-code {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.track-order-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.track-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+}
+
+.track-badge-ok {
+  background: rgba(22, 163, 74, 0.14);
+  color: #15803d;
+}
+
+.track-badge-warn {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+
+.track-badge-neutral {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.track-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 1rem 0;
+  padding-left: 0.35rem;
+}
+
+.track-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  opacity: 0.45;
+  position: relative;
+}
+
+.track-step.done,
+.track-step.active {
+  opacity: 1;
+}
+
+.track-step-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+  background: var(--color-border);
+  border: 2px solid var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-border);
+}
+
+.track-step.done .track-step-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.25);
+}
+
+.track-step.active .track-step-dot {
+  background: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.2);
+}
+
+[data-theme="dark"] .track-step.active .track-step-dot {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+
+.track-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.track-step-content strong {
+  font-size: 0.88rem;
+}
+
+.track-step-content span {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.track-items-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.track-item-row,
+.track-total-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.track-total-row {
+  padding-top: 0.45rem;
+  margin-top: 0.2rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.92rem;
+}
+
+.track-cancelled-box,
+.track-empty-msg {
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.22);
+  font-size: 0.85rem;
+  margin: 0.85rem 0;
+}
+
+.track-empty-msg {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  margin: 0;
+}

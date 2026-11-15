@@ -60,7 +60,7 @@
   </script>
 
   <!-- Main Stylesheet (con version para forzar refresco en móviles) -->
-  <link rel="stylesheet" href="style.css?v=3.8">
+  <link rel="stylesheet" href="style.css?v=3.9">
 </head>
 
 <body>
@@ -98,6 +98,13 @@
             <span>⌘K</span>
           </button>
         </div>
+
+        <!-- Track Order Button -->
+        <button id="openTrackOrderBtn" class="nav-track-btn" type="button" aria-label="Seguir mi pedido"
+          title="Seguir mi pedido">
+          <i data-lucide="package-search" class="icon-sm"></i>
+          <span class="nav-track-label">Seguir pedido</span>
+        </button>
 
         <!-- Theme Toggle (Light / Dark) -->
         <button id="themeToggleBtn" class="nav-icon-btn theme-toggle-btn" type="button"
@@ -954,8 +961,41 @@
     </div>
   </div>
 
+  <!-- Track Order Modal -->
+  <div class="modal-backdrop" id="trackOrderModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card modal-md track-order-card">
+      <button class="modal-close-btn" id="closeTrackOrderModalBtn" aria-label="Cerrar seguimiento">
+        <i data-lucide="x" class="icon-md"></i>
+      </button>
+
+      <div class="track-order-header">
+        <span class="editorial-kicker">Seguimiento en vivo</span>
+        <h2>Rastrear mi Pedido</h2>
+        <p>Ingresa tu número de pedido y el teléfono con el que compraste.</p>
+      </div>
+
+      <form id="trackOrderForm" class="track-order-form">
+        <div class="track-form-grid">
+          <div class="form-group">
+            <label for="trackOrderIdInput">Número de Pedido</label>
+            <input type="text" id="trackOrderIdInput" placeholder="Ej: #ORD-4 o 4" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="trackOrderPhoneInput">Teléfono</label>
+            <input type="tel" id="trackOrderPhoneInput" placeholder="Ej: 55676634" required autocomplete="tel">
+          </div>
+        </div>
+        <button type="submit" id="trackOrderSubmitBtn" class="btn btn-primary btn-block">
+          Consultar Estado
+        </button>
+      </form>
+
+      <div id="trackOrderResult" class="track-order-result" style="display: none;"></div>
+    </div>
+  </div>
+
   <!-- Main JavaScript App -->
-  <script src="app.js?v=3.9"></script>
+  <script src="app.js?v=4.0"></script>
 </body>
 
 </html>

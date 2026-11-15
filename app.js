@@ -142,6 +142,16 @@
     successTitle: document.getElementById('successTitle'),
     successSubtitle: document.getElementById('successSubtitle'),
     confirmedOrderId: document.getElementById('confirmedOrderId'),
+
+    // Track Order Modal
+    openTrackOrderBtn: document.getElementById('openTrackOrderBtn'),
+    trackOrderModal: document.getElementById('trackOrderModal'),
+    closeTrackOrderModalBtn: document.getElementById('closeTrackOrderModalBtn'),
+    trackOrderForm: document.getElementById('trackOrderForm'),
+    trackOrderIdInput: document.getElementById('trackOrderIdInput'),
+    trackOrderPhoneInput: document.getElementById('trackOrderPhoneInput'),
+    trackOrderSubmitBtn: document.getElementById('trackOrderSubmitBtn'),
+    trackOrderResult: document.getElementById('trackOrderResult'),
     orderReceiptDetails: document.getElementById('orderReceiptDetails'),
     successCloseBtn: document.getElementById('successCloseBtn'),
 
@@ -1454,6 +1464,155 @@
   }
 
   /* ==========================================================================
+     9b. Order Tracking (Seguimiento de Pedido)
+     ========================================================================== */
+  function openTrackOrderModal() {
+    if (!DOM.trackOrderModal) return;
+    DOM.trackOrderModal.classList.add('open');
+    DOM.trackOrderModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    if (DOM.trackOrderIdInput) {
+      setTimeout(() => DOM.trackOrderIdInput.focus(), 60);
+    }
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function closeTrackOrderModal() {
+    if (!DOM.trackOrderModal) return;
+    DOM.trackOrderModal.classList.remove('open');
+    DOM.trackOrderModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function renderTrackedOrder(order) {
+    if (!DOM.trackOrderResult) return;
+    const isTransfer = order.metodo_pago === 'transferencia';
+    const isPaid = order.estado_pago === 'pagado';
+    const isCancelled = order.estado === 'cancelado';
+    const dateStr = new Date(order.created_at).toLocaleString('es-NI', { dateStyle: 'medium', timeStyle: 'short' });
+
+    const paymentBadge = isTransfer
+      ? (isPaid
+          ? '<span class="track-badge track-badge-ok">Pago verificado ✓</span>'
+          : '<span class="track-badge track-badge-warn">Comprobante en verificación</span>')
+      : '<span class="track-badge track-badge-neutral">Pago contra entrega</span>';
+
+    const shippingOrder = ['pendiente', 'preparando', 'enviado', 'entregado'];
+    const currentStepIdx = Math.max(0, shippingOrder.indexOf(order.estado || 'pendiente'));
+
+    const steps = [
+      { label: 'Pedido recibido', desc: 'Tu orden fue registrada en el sistema.', done: true, active: !isCancelled && currentStepIdx === 0 && (!isTransfer || !isPaid) },
+      {
+        label: isTransfer ? 'Verificación de pago' : 'Confirmación de pago',
+        desc: isTransfer
+          ? (isPaid ? 'Transferencia confirmada por el administrador.' : 'Estamos revisando la foto de tu comprobante.')
+          : 'Se cobrará al momento de la entrega.',
+        done: !isTransfer || isPaid,
+        active: isTransfer && !isPaid && !isCancelled
+      },
+      { label: 'Preparando envío', desc: 'Empacando tus prendas con cuidado.', done: !isCancelled && currentStepIdx >= 1, active: !isCancelled && currentStepIdx === 1 },
+      { label: 'En camino', desc: 'Tu pedido salió hacia tu dirección.', done: !isCancelled && currentStepIdx >= 2, active: !isCancelled && currentStepIdx === 2 },
+      { label: 'Entregado', desc: 'Pedido entregado con éxito.', done: !isCancelled && currentStepIdx >= 3, active: !isCancelled && currentStepIdx === 3 }
+    ];
+
+    const timelineHtml = isCancelled
+      ? `<div class="track-cancelled-box">Este pedido fue marcado como <strong>Cancelado</strong>. Escríbenos por WhatsApp si necesitas ayuda.</div>`
+      : `<div class="track-timeline">
+          ${steps.map(st => `
+            <div class="track-step ${st.done ? 'done' : ''} ${st.active ? 'active' : ''}">
+              <span class="track-step-dot"></span>
+              <div class="track-step-content">
+                <strong>${st.label}</strong>
+                <span>${st.desc}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>`;
+
+    const itemsHtml = (order.items || []).map(it => `
+      <div class="track-item-row">
+        <span><strong>${it.cantidad}x</strong> ${escapeHTML(it.nombre)} (${escapeHTML(it.talla)} / ${escapeHTML(it.color)})</span>
+        <span>${formatMoney(it.precio_unitario)}</span>
+      </div>
+    `).join('');
+
+    const waText = encodeURIComponent(`Hola StyleGT, consulto por el estado de mi pedido #ORD-${order.id} a nombre de ${order.nombre_cliente}.`);
+
+    DOM.trackOrderResult.innerHTML = `
+      <div class="track-result-card">
+        <div class="track-result-head">
+          <div>
+            <div class="track-order-code">#ORD-${order.id}</div>
+            <div class="track-order-meta">${escapeHTML(order.nombre_cliente)} · ${dateStr}</div>
+          </div>
+          ${paymentBadge}
+        </div>
+        ${timelineHtml}
+        <div class="track-items-box">
+          ${itemsHtml || '<div class="track-item-row"><span>Sin detalle de productos</span></div>'}
+          <div class="track-total-row">
+            <span>Total</span>
+            <strong>${formatMoney(order.total)}</strong>
+          </div>
+        </div>
+        <a href="https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${waText}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-block" style="margin-top:0.85rem;">
+          <i data-lucide="message-circle" class="icon-sm"></i>
+          <span>Consultar por WhatsApp</span>
+        </a>
+      </div>
+    `;
+    DOM.trackOrderResult.style.display = 'block';
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  async function handleTrackOrderSubmit(e) {
+    e.preventDefault();
+    if (!DOM.trackOrderIdInput || !DOM.trackOrderPhoneInput || !DOM.trackOrderResult) return;
+
+    const rawId = DOM.trackOrderIdInput.value.trim();
+    const rawPhone = DOM.trackOrderPhoneInput.value.trim();
+    const orderId = parseInt(rawId.replace(/[^0-9]/g, ''), 10);
+
+    if (!orderId || orderId <= 0) {
+      showToast('Ingresa un número de pedido válido (ej: 4 o #ORD-4)', 'error');
+      return;
+    }
+    if (rawPhone.replace(/[^0-9]/g, '').length < 7) {
+      showToast('Ingresa el teléfono completo con el que realizaste el pedido', 'error');
+      return;
+    }
+
+    const origText = DOM.trackOrderSubmitBtn.textContent;
+    DOM.trackOrderSubmitBtn.disabled = true;
+    DOM.trackOrderSubmitBtn.textContent = 'Buscando...';
+
+    try {
+      const { data, error } = await supabaseClient.rpc('consultar_pedido', {
+        p_id: orderId,
+        p_telefono: rawPhone
+      });
+
+      if (error) {
+        console.error(error);
+        DOM.trackOrderResult.innerHTML = `<div class="track-empty-msg">No se pudo consultar en este momento. Asegúrate de haber ejecutado <code>supabase_seguimiento.sql</code> en Supabase.</div>`;
+        DOM.trackOrderResult.style.display = 'block';
+        return;
+      }
+
+      if (!data) {
+        DOM.trackOrderResult.innerHTML = `<div class="track-empty-msg">No encontramos un pedido <strong>#ORD-${orderId}</strong> asociado a ese teléfono. Verifica los datos e intenta de nuevo.</div>`;
+        DOM.trackOrderResult.style.display = 'block';
+        return;
+      }
+
+      renderTrackedOrder(data);
+    } finally {
+      DOM.trackOrderSubmitBtn.disabled = false;
+      DOM.trackOrderSubmitBtn.textContent = origText;
+    }
+  }
+
+  /* ==========================================================================
      10. Event Listeners Initialization
      ========================================================================== */
   function setupEventListeners() {
@@ -1493,6 +1652,22 @@
     DOM.productModal.addEventListener('click', (e) => {
       if (e.target === DOM.productModal) closeProductModal();
     });
+
+    // Track Order Modal
+    if (DOM.openTrackOrderBtn) {
+      DOM.openTrackOrderBtn.addEventListener('click', openTrackOrderModal);
+    }
+    if (DOM.closeTrackOrderModalBtn) {
+      DOM.closeTrackOrderModalBtn.addEventListener('click', closeTrackOrderModal);
+    }
+    if (DOM.trackOrderModal) {
+      DOM.trackOrderModal.addEventListener('click', (e) => {
+        if (e.target === DOM.trackOrderModal) closeTrackOrderModal();
+      });
+    }
+    if (DOM.trackOrderForm) {
+      DOM.trackOrderForm.addEventListener('submit', handleTrackOrderSubmit);
+    }
 
     // Quantity Stepper in Product Modal
     DOM.qtyMinusBtn.addEventListener('click', () => {
