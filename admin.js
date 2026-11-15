@@ -385,6 +385,16 @@
   /* ==========================================================================
      Tab: Comprobantes de Transferencia
      ========================================================================== */
+  function buildOrderWhatsAppUrl(order) {
+    const cleanPhone = (order.telefono || '').replace(/[^0-9]/g, '');
+    const waPhone = cleanPhone.startsWith('505') ? cleanPhone : `505${cleanPhone}`;
+    const isPaid = order.estado_pago === 'pagado';
+    const text = isPaid
+      ? `¡Hola ${order.nombre_cliente}! Confirmamos tu transferencia del pedido #ORD-${order.id} por ${formatMoney(order.total)} en StyleGT. Tu pago fue verificado correctamente y ya estamos preparando tu envío.`
+      : `Hola ${order.nombre_cliente}, estamos revisando tu comprobante del pedido #ORD-${order.id} en StyleGT. ¿Nos podrías confirmar un detalle de la transferencia?`;
+    return `https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`;
+  }
+
   function renderReceipts() {
     const withReceipts = state.orders.filter(o => Boolean(o.comprobante_url));
     const pendingCount = withReceipts.filter(o => o.estado_pago !== 'pagado').length;
@@ -420,8 +430,7 @@
         return `<div><strong>${it.cantidad}x</strong> ${escapeHTML(pName)} <span style="color:var(--muted);">(${escapeHTML(talla)} / ${escapeHTML(color)})</span> — ${formatMoney(it.precio_unitario)}</div>`;
       }).join('');
 
-      const cleanPhone = (order.telefono || '').replace(/[^0-9]/g, '');
-      const waLink = `https://wa.me/${cleanPhone.startsWith('505') ? cleanPhone : '505' + cleanPhone}?text=${encodeURIComponent(`Hola ${order.nombre_cliente}, revisamos tu comprobante del pedido #ORD-${order.id} en StyleGT.`)}`;
+      const waLink = buildOrderWhatsAppUrl(order);
 
       const card = document.createElement('div');
       card.className = 'receipt-card';
@@ -447,7 +456,9 @@
         <div class="receipt-card-footer">
           <strong style="font-size:1.05rem;">${formatMoney(order.total)}</strong>
           <div class="receipt-card-actions">
-            <a class="btn-outline" href="${waLink}" target="_blank" rel="noopener" style="padding:0.4rem 0.7rem;font-size:0.78rem;">WhatsApp</a>
+            <a class="btn-outline" href="${waLink}" target="_blank" rel="noopener" style="padding:0.4rem 0.7rem;font-size:0.78rem;${isPaid ? 'border-color:#16a34a;color:#16a34a;font-weight:600;' : ''}">
+              ${isPaid ? 'Notificar pago (WhatsApp)' : 'WhatsApp'}
+            </a>
             <button type="button" class="btn-outline btn-receipt-toggle-paid" style="padding:0.4rem 0.75rem;font-size:0.78rem;">
               ${isPaid ? 'Pagado ✓' : 'Marcar Pagado'}
             </button>
@@ -464,7 +475,12 @@
           return;
         }
         order.estado_pago = nextPaid;
-        showToast(`Comprobante #ORD-${order.id} → ${nextPaid === 'pagado' ? 'Verificado' : 'Por verificar'}`, 'success');
+        showToast(
+          nextPaid === 'pagado'
+            ? `Comprobante #ORD-${order.id} verificado — ya puedes notificar al cliente por WhatsApp`
+            : `Comprobante #ORD-${order.id} → Por verificar`,
+          'success'
+        );
         renderReceipts();
         renderOrders();
       });
