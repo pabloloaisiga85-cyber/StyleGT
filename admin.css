@@ -578,3 +578,90 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   0% { transform: translateX(-100%); }
   100% { transform: translateX(0); }
 }
+
+
+/* ==========================================================================
+   Stock Warning Alerts & Pulsing Indicators
+   ========================================================================== */
+.tab-badge-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.pulsing-badge {
+  animation: pulseGlow 1.6s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    transform: scale(1);
+  }
+}
+
+.stock-pill-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-weight: 700;
+}
+
+.stock-beacon {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  display: inline-block;
+  position: relative;
+}
+
+.stock-beacon-out {
+  background: #ef4444;
+}
+
+.stock-beacon-out::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: #ef4444;
+  animation: pulseBeacon 1.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  opacity: 0.75;
+}
+
+.stock-beacon-low {
+  background: #f59e0b;
+}
+
+.stock-beacon-low::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: #f59e0b;
+  animation: pulseBeacon 1.8s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  opacity: 0.65;
+}
+
+@keyframes pulseBeacon {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.stock-warn-text-out {
+  color: #ef4444;
+  font-weight: 800;
+}
+
+.stock-warn-text-low {
+  color: #d97706;
+  font-weight: 700;
+}

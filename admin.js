@@ -209,6 +209,17 @@
     $('kpiProducts').textContent = activeProds;
     $('kpiLowStock').textContent = lowStockItems.length;
 
+    const stockBadge = $('lowStockNavBadge');
+    if (stockBadge) {
+      if (lowStockItems.length > 0) {
+        stockBadge.textContent = lowStockItems.length;
+        stockBadge.style.display = 'inline-block';
+        stockBadge.title = `${lowStockItems.length} variante(s) con stock bajo o agotado`;
+      } else {
+        stockBadge.style.display = 'none';
+      }
+    }
+
     const badge = $('pendingOrdersBadge');
     if (pendingCount > 0) {
       badge.textContent = pendingCount;
@@ -350,8 +361,31 @@
 
     tbody.innerHTML = '';
     filtered.forEach(p => {
-      const totalStock = (p.variantes_producto || []).reduce((s, v) => s + Number(v.stock || 0), 0);
+      const variants = p.variantes_producto || [];
+      const totalStock = variants.reduce((s, v) => s + Number(v.stock || 0), 0);
       const catName = p.categorias?.nombre || 'Sin categoría';
+
+      // Check stock alert levels
+      const hasOutOfStock = variants.some(v => Number(v.stock) === 0);
+      const hasLowStock = variants.some(v => Number(v.stock) > 0 && Number(v.stock) <= 3);
+
+      let stockHTML = `<span>${totalStock} uds</span>`;
+      if (totalStock === 0 || hasOutOfStock) {
+        stockHTML = `
+          <div class="stock-pill-indicator stock-warn-text-out" title="Variante agotada">
+            <span class="stock-beacon stock-beacon-out"></span>
+            <span>${totalStock} uds (Agotado)</span>
+          </div>
+        `;
+      } else if (hasLowStock) {
+        stockHTML = `
+          <div class="stock-pill-indicator stock-warn-text-low" title="Stock bajo (≤ 3 uds)">
+            <span class="stock-beacon stock-beacon-low"></span>
+            <span>${totalStock} uds (Bajo)</span>
+          </div>
+        `;
+      }
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>
@@ -359,13 +393,13 @@
             <img src="${escapeHTML(p.imagen_url || '')}" alt="" class="prod-thumb" onerror="this.style.visibility='hidden'">
             <div>
               <div class="prod-name">${escapeHTML(p.nombre)}</div>
-              <div class="prod-variants-mini">${(p.variantes_producto || []).length} variantes</div>
+              <div class="prod-variants-mini">${variants.length} variantes</div>
             </div>
           </div>
         </td>
         <td>${escapeHTML(catName)}</td>
         <td><strong>${formatMoney(p.precio)}</strong></td>
-        <td>${totalStock} uds</td>
+        <td>${stockHTML}</td>
         <td>
           <span class="status-badge ${p.activo ? 'status-active' : 'status-paused'}">
             ${p.activo ? 'Activo' : 'Pausado'}

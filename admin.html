@@ -27,7 +27,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <link rel="stylesheet" href="admin.css?v=1.1">
+  <link rel="stylesheet" href="admin.css?v=1.2">
 </head>
 
 <body>
@@ -101,6 +101,7 @@
         <button type="button" class="nav-tab" data-tab="productos">
           <i data-lucide="shirt" class="icon-sm"></i>
           <span>Productos</span>
+          <span id="lowStockNavBadge" class="tab-badge tab-badge-danger pulsing-badge" style="display: none;">0</span>
         </button>
         <button type="button" class="nav-tab" data-tab="categorias">
           <i data-lucide="tags" class="icon-sm"></i>
