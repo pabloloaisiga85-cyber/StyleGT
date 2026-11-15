@@ -48,7 +48,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
   <!-- Main Stylesheet (con version para forzar refresco en móviles) -->
-  <link rel="stylesheet" href="style.css?v=2.2">
+  <link rel="stylesheet" href="style.css?v=2.3">
 </head>
 
 <body>
@@ -69,18 +69,22 @@
       <!-- Desktop Navigation links -->
       <nav class="nav-links">
         <a href="#catalogo" class="nav-link active">Colección</a>
-        <a href="#destacados" class="nav-link">Lo Nuevo</a>
+        <a href="#colecciones-bento" class="nav-link">Categorías</a>
+        <a href="#lookbook" class="nav-link">Lookbook</a>
         <a href="#nosotros" class="nav-link">Filosofía</a>
       </nav>
 
       <!-- Action Buttons -->
       <div class="nav-actions">
-        <!-- Search Trigger -->
+        <!-- Search Trigger / Command Palette -->
         <div class="search-box">
           <i data-lucide="search" class="icon-sm"></i>
           <input type="text" id="searchInput" placeholder="Buscar prendas..." autocomplete="off">
           <button id="clearSearchBtn" class="clear-search-btn" title="Limpiar búsqueda" style="display: none;">
             <i data-lucide="x" class="icon-xs"></i>
+          </button>
+          <button type="button" id="openCmdPaletteBtn" class="cmd-k-badge" title="Búsqueda rápida (Ctrl+K)" aria-label="Abrir búsqueda rápida">
+            <span>⌘K</span>
           </button>
         </div>
 
@@ -112,6 +116,9 @@
           <a href="#catalogo" class="btn btn-primary">
             Explorar Catálogo
             <i data-lucide="arrow-right" class="icon-sm"></i>
+          </a>
+          <a href="#lookbook" class="btn btn-secondary hero-secondary-btn">
+            Shop the Look
           </a>
         </div>
       </div>
@@ -174,6 +181,29 @@
     </div>
   </section>
 
+  <!-- Asymmetric Bento Collections (Dynamic from Supabase) -->
+  <section class="bento-collections-section" id="colecciones-bento">
+    <div class="container">
+      <div class="bento-header">
+        <div>
+          <span class="editorial-kicker">Curaduría 2026</span>
+          <h2 class="section-title">Explora por Silueta</h2>
+        </div>
+        <a href="#catalogo" class="bento-view-all">
+          <span>Ver todo</span>
+          <i data-lucide="arrow-up-right" class="icon-xs"></i>
+        </a>
+      </div>
+      <div class="bento-grid" id="bentoCollectionsGrid">
+        <!-- Skeleton placeholders while Supabase loads -->
+        <div class="bento-card bento-card-featured skeleton-bento"></div>
+        <div class="bento-card skeleton-bento"></div>
+        <div class="bento-card skeleton-bento"></div>
+        <div class="bento-card skeleton-bento"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- Main Catalog Section -->
   <main class="catalog-section" id="catalogo">
     <div class="container">
@@ -230,6 +260,11 @@
           <div class="skeleton-line title"></div>
           <div class="skeleton-line price"></div>
         </div>
+        <div class="product-card skeleton-card">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line price"></div>
+        </div>
       </div>
 
       <!-- Empty State -->
@@ -242,6 +277,22 @@
 
     </div>
   </main>
+
+  <!-- Editorial Shop the Look Section (Dynamic from Supabase) -->
+  <section class="lookbook-section" id="lookbook">
+    <div class="container">
+      <div class="bento-header">
+        <div>
+          <span class="editorial-kicker">Editorial Lookbook</span>
+          <h2 class="section-title">Shop the Look</h2>
+        </div>
+        <p class="section-subtitle">Combinaciones esenciales listas para añadir directamente a tu bolsa.</p>
+      </div>
+      <div class="lookbook-layout" id="shopTheLookContainer">
+        <!-- Populated dynamically from Supabase products -->
+      </div>
+    </div>
+  </section>
 
   <!-- Brand Philosophy Section -->
   <section class="about-section" id="nosotros">
@@ -308,8 +359,14 @@
             <!-- Size Selector -->
             <div class="variant-block">
               <div class="variant-header-row">
-                <label class="variant-label">Talla:</label>
-                <span class="selected-variant-name" id="selectedSizeName">-</span>
+                <div class="variant-label-group">
+                  <label class="variant-label">Talla:</label>
+                  <span class="selected-variant-name" id="selectedSizeName">-</span>
+                </div>
+                <button type="button" id="openSizeGuideBtn" class="size-guide-trigger">
+                  <i data-lucide="ruler" class="icon-xs"></i>
+                  <span>Guía de Tallas</span>
+                </button>
               </div>
               <div class="variant-options-list" id="sizeOptionsContainer">
                 <!-- Size chips loaded dynamically -->
@@ -377,6 +434,16 @@
       <button class="cart-close-btn" id="closeCartBtn" aria-label="Cerrar carrito">
         <i data-lucide="x" class="icon-md"></i>
       </button>
+    </div>
+
+    <!-- Free Shipping Progress Bar -->
+    <div class="cart-shipping-progress-wrap" id="cartShippingProgressWrap">
+      <div class="cart-shipping-progress-text" id="cartShippingProgressText">
+        Añade <strong>$50.00</strong> para obtener envío gratis
+      </div>
+      <div class="cart-shipping-track">
+        <div class="cart-shipping-fill" id="cartShippingFill" style="width: 0%;"></div>
+      </div>
     </div>
 
     <!-- Cart Items List Container -->
@@ -752,6 +819,53 @@
         d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
   </a>
+
+  <!-- Interactive Size Guide Modal -->
+  <div class="modal-backdrop" id="sizeGuideModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card modal-md size-guide-modal-card">
+      <button class="modal-close-btn" id="closeSizeGuideBtn" aria-label="Cerrar guía de tallas">
+        <i data-lucide="x" class="icon-md"></i>
+      </button>
+      <div class="size-guide-header">
+        <span class="editorial-kicker">Fit & Medidas</span>
+        <h2>Guía de Tallas</h2>
+        <p>Medidas de la prenda extendida. Corte relajado contemporáneo.</p>
+      </div>
+      <div class="size-guide-controls">
+        <div class="size-guide-tabs" id="sizeGuideTabs">
+          <button type="button" class="sg-tab active" data-sg-cat="tops">Camisetas & Tops</button>
+          <button type="button" class="sg-tab" data-sg-cat="pants">Pantalones</button>
+          <button type="button" class="sg-tab" data-sg-cat="outerwear">Chaquetas & Punto</button>
+        </div>
+        <div class="size-guide-unit-toggle" id="sizeGuideUnitToggle">
+          <button type="button" class="sg-unit active" data-unit="cm">CM</button>
+          <button type="button" class="sg-unit" data-unit="in">IN</button>
+        </div>
+      </div>
+      <div class="size-guide-table-wrap" id="sizeGuideTableWrap">
+        <!-- Populated dynamically -->
+      </div>
+      <p class="size-guide-note">Tip: Si estás entre dos tallas, elige la menor para un ajuste regular o la mayor para caída oversize.</p>
+    </div>
+  </div>
+
+  <!-- Command Palette Instant Search Modal (Ctrl+K) -->
+  <div class="modal-backdrop cmd-palette-backdrop" id="commandPaletteModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="cmd-palette-card">
+      <div class="cmd-palette-input-row">
+        <i data-lucide="search" class="icon-md"></i>
+        <input type="text" id="cmdPaletteInput" class="cmd-palette-input" placeholder="Buscar camisetas, pantalones, colores o categorías..." autocomplete="off">
+        <button type="button" id="closeCmdPaletteBtn" class="cmd-esc-badge">ESC</button>
+      </div>
+      <div class="cmd-palette-results" id="cmdPaletteResults">
+        <!-- Live results populated from state.products -->
+      </div>
+      <div class="cmd-palette-footer">
+        <span>Escribe para filtrar el catálogo en tiempo real</span>
+        <span>Atajo: <kbd>Ctrl</kbd> + <kbd>K</kbd></span>
+      </div>
+    </div>
+  </div>
 
   <!-- Main JavaScript App -->
   <script src="app.js"></script>

@@ -139,6 +139,23 @@
     // Toasts
     toastContainer: document.getElementById('toastContainer'),
 
+    // Hydrogen Editorial Upgrade Elements
+    bentoCollectionsGrid: document.getElementById('bentoCollectionsGrid'),
+    shopTheLookContainer: document.getElementById('shopTheLookContainer'),
+    cartShippingProgressText: document.getElementById('cartShippingProgressText'),
+    cartShippingFill: document.getElementById('cartShippingFill'),
+    openSizeGuideBtn: document.getElementById('openSizeGuideBtn'),
+    sizeGuideModal: document.getElementById('sizeGuideModal'),
+    closeSizeGuideBtn: document.getElementById('closeSizeGuideBtn'),
+    sizeGuideTabs: document.getElementById('sizeGuideTabs'),
+    sizeGuideUnitToggle: document.getElementById('sizeGuideUnitToggle'),
+    sizeGuideTableWrap: document.getElementById('sizeGuideTableWrap'),
+    openCmdPaletteBtn: document.getElementById('openCmdPaletteBtn'),
+    commandPaletteModal: document.getElementById('commandPaletteModal'),
+    closeCmdPaletteBtn: document.getElementById('closeCmdPaletteBtn'),
+    cmdPaletteInput: document.getElementById('cmdPaletteInput'),
+    cmdPaletteResults: document.getElementById('cmdPaletteResults'),
+
     // Admin Dashboard
     openAdminBtn: document.getElementById('openAdminBtn'),
     adminModal: document.getElementById('adminModal'),
@@ -231,6 +248,7 @@
       if (error) throw error;
       state.categories = data || [];
       renderCategoryFilters();
+      renderBentoCollections();
     } catch (err) {
       console.error('Error fetching categorias:', err);
       showToast('No se pudieron cargar las categorías', 'error');
@@ -241,7 +259,7 @@
     try {
       const { data, error } = await supabase
         .from('productos')
-        .select('*, categorias(nombre)')
+        .select('*, categorias(nombre), variantes_producto(id, color, talla, stock)')
         .eq('activo', true)
         .order('id', { ascending: true });
 
@@ -249,6 +267,8 @@
       state.products = data || [];
       renderProducts();
       renderHeroCarousel();
+      renderBentoCollections();
+      renderShopTheLook();
     } catch (err) {
       console.error('Error fetching productos:', err);
       showToast('Error de conexión al cargar el catálogo', 'error');
@@ -382,14 +402,43 @@
       const fallbackImg = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80';
       const imgSrc = product.imagen_url || fallbackImg;
 
+      const inStockVariants = (product.variantes_producto || []).filter(v => v.stock > 0);
+      const uniqueColors = [...new Set(inStockVariants.map(v => v.color))];
+      let activeColor = uniqueColors[0] || null;
+
+      const swatchesHTML = uniqueColors.length > 0
+        ? `<div class="card-swatches-row">${uniqueColors.map((col, idx) =>
+            `<button type="button" class="card-swatch-dot ${idx === 0 ? 'active' : ''}" data-color="${escapeHTML(col)}" title="${escapeHTML(col)}" style="background-color: ${getColorHex(col)};" aria-label="Color ${escapeHTML(col)}"></button>`
+          ).join('')}</div>`
+        : '';
+
+      const buildQuickSizesHTML = (color) => {
+        const matching = color
+          ? inStockVariants.filter(v => v.color === color)
+          : inStockVariants;
+        if (matching.length === 0) return '';
+        return matching.map(v =>
+          `<button type="button" class="quick-size-pill" data-variant-id="${v.id}">${escapeHTML(v.talla)}</button>`
+        ).join('');
+      };
+
+      const quickAddHTML = inStockVariants.length > 0
+        ? `<div class="card-quick-add-bar">
+             <span class="quick-add-label">Quick Add</span>
+             <div class="quick-add-sizes">${buildQuickSizesHTML(activeColor)}</div>
+           </div>`
+        : '';
+
       card.innerHTML = `
         <div class="product-image-container">
-          <img src="${imgSrc}" alt="${product.nombre}" class="product-thumb" loading="lazy" onerror="this.src='${fallbackImg}'">
-          <span class="product-category-tag">${categoryName}</span>
+          <img src="${imgSrc}" alt="${escapeHTML(product.nombre)}" class="product-thumb" loading="lazy" onerror="this.src='${fallbackImg}'">
+          <span class="product-category-tag">${escapeHTML(categoryName)}</span>
+          ${quickAddHTML}
         </div>
         <div class="product-card-body">
-          <h3 class="product-title">${product.nombre}</h3>
-          <p class="product-desc">${product.descripcion || ''}</p>
+          ${swatchesHTML}
+          <h3 class="product-title">${escapeHTML(product.nombre)}</h3>
+          <p class="product-desc">${escapeHTML(product.descripcion || '')}</p>
           <div class="product-card-footer">
             <span class="product-price">${formatMoney(product.precio)}</span>
             <button class="btn-quick-view" type="button" aria-label="Seleccionar talla y color">
@@ -400,11 +449,154 @@
         </div>
       `;
 
+      // Swatch click handler on card (switches quick-add sizes without opening modal)
+      card.querySelectorAll('.card-swatch-dot').forEach(dot => {
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          activeColor = dot.dataset.color;
+          card.querySelectorAll('.card-swatch-dot').forEach(d => d.classList.remove('active'));
+          dot.classList.add('active');
+          const sizesWrap = card.querySelector('.quick-add-sizes');
+          if (sizesWrap) {
+            sizesWrap.innerHTML = buildQuickSizesHTML(activeColor);
+            bindQuickSizePills(sizesWrap);
+          }
+        });
+      });
+
+      const bindQuickSizePills = (container) => {
+        container.querySelectorAll('.quick-size-pill').forEach(pill => {
+          pill.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const vId = Number(pill.dataset.variantId);
+            const variant = inStockVariants.find(v => v.id === vId);
+            if (variant) {
+              addToCart(product, variant, 1);
+            }
+          });
+        });
+      };
+
+      const initialSizesWrap = card.querySelector('.quick-add-sizes');
+      if (initialSizesWrap) bindQuickSizePills(initialSizesWrap);
+
       card.addEventListener('click', () => openProductModal(product));
       DOM.productsGrid.appendChild(card);
     });
 
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  /* ==========================================================================
+     6.0 Bento Collections & Shop the Look (Dynamic from Supabase)
+     ========================================================================== */
+  function renderBentoCollections() {
+    if (!DOM.bentoCollectionsGrid || !state.categories.length || !state.products.length) return;
+
+    const fallbackImg = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80';
+    DOM.bentoCollectionsGrid.innerHTML = '';
+
+    state.categories.slice(0, 4).forEach((cat, index) => {
+      const catProducts = state.products.filter(p => Number(p.categoria_id) === Number(cat.id));
+      const coverProduct = catProducts.find(p => p.imagen_url) || state.products[index % state.products.length];
+      const coverImg = (coverProduct && coverProduct.imagen_url) ? coverProduct.imagen_url : fallbackImg;
+
+      const card = document.createElement('div');
+      card.className = `bento-card ${index === 0 ? 'bento-card-featured' : ''}`;
+      card.innerHTML = `
+        <img src="${coverImg}" alt="${escapeHTML(cat.nombre)}" loading="lazy" onerror="this.src='${fallbackImg}'">
+        <div class="bento-card-overlay">
+          <span class="bento-card-count">${catProducts.length} prenda${catProducts.length === 1 ? '' : 's'}</span>
+          <div class="bento-card-title">
+            <span>${escapeHTML(cat.nombre)}</span>
+            <i data-lucide="arrow-up-right" class="icon-sm"></i>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => {
+        state.activeCategory = String(cat.id);
+        renderCategoryFilters();
+        renderProducts();
+        const catalogEl = document.getElementById('catalogo');
+        if (catalogEl) catalogEl.scrollIntoView({ behavior: 'smooth' });
+      });
+
+      DOM.bentoCollectionsGrid.appendChild(card);
+    });
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function renderShopTheLook() {
+    if (!DOM.shopTheLookContainer || !state.products.length) return;
+
+    const fallbackImg = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80';
+    // Pick up to 3 distinct-category products automatically from Supabase
+    const picked = [];
+    const seenCats = new Set();
+    for (const p of state.products) {
+      if (!seenCats.has(p.categoria_id) && picked.length < 3) {
+        picked.push(p);
+        seenCats.add(p.categoria_id);
+      }
+    }
+    for (const p of state.products) {
+      if (picked.length >= 3) break;
+      if (!picked.some(x => x.id === p.id)) picked.push(p);
+    }
+
+    const heroLookProduct = picked[0];
+    const heroLookImg = (heroLookProduct && heroLookProduct.imagen_url) ? heroLookProduct.imagen_url : fallbackImg;
+
+    DOM.shopTheLookContainer.innerHTML = `
+      <div class="lookbook-hero-card">
+        <img src="${heroLookImg}" alt="${escapeHTML(heroLookProduct.nombre)}" loading="lazy" onerror="this.src='${fallbackImg}'">
+        <div class="lookbook-hero-caption">
+          <div>
+            <h3>Look Esencial StyleGT</h3>
+            <p>${picked.length} piezas curadas desde tu catálogo en vivo</p>
+          </div>
+          <a href="#catalogo" class="btn btn-primary btn-sm">Explorar</a>
+        </div>
+      </div>
+      <div class="lookbook-items-list" id="lookbookItemsList"></div>
+    `;
+
+    const listEl = document.getElementById('lookbookItemsList');
+    picked.forEach(prod => {
+      const catName = (prod.categorias && prod.categorias.nombre) ? prod.categorias.nombre.trim() : 'Esencial';
+      const imgSrc = prod.imagen_url || fallbackImg;
+      const firstInStock = (prod.variantes_producto || []).find(v => v.stock > 0);
+
+      const row = document.createElement('div');
+      row.className = 'lookbook-item-row';
+      row.innerHTML = `
+        <img src="${imgSrc}" alt="${escapeHTML(prod.nombre)}" class="lookbook-item-thumb" onerror="this.src='${fallbackImg}'">
+        <div class="lookbook-item-info">
+          <div class="lookbook-item-cat">${escapeHTML(catName)}</div>
+          <div class="lookbook-item-title">${escapeHTML(prod.nombre)}</div>
+          <div class="lookbook-item-price">${formatMoney(prod.precio)}</div>
+        </div>
+        <div class="lookbook-item-actions">
+          ${firstInStock
+            ? `<button type="button" class="lookbook-quick-btn">+ Añadir (${escapeHTML(firstInStock.talla)})</button>`
+            : `<button type="button" class="lookbook-quick-btn">Ver detalle</button>`}
+        </div>
+      `;
+
+      row.querySelector('.lookbook-item-thumb').addEventListener('click', () => openProductModal(prod));
+      row.querySelector('.lookbook-item-info').addEventListener('click', () => openProductModal(prod));
+      row.querySelector('.lookbook-quick-btn').addEventListener('click', () => {
+        if (firstInStock) {
+          addToCart(prod, firstInStock, 1);
+        } else {
+          openProductModal(prod);
+        }
+      });
+
+      listEl.appendChild(row);
+    });
   }
 
   /* ==========================================================================
@@ -833,6 +1025,21 @@
     }
     DOM.cartTotal.textContent = formatMoney(total);
 
+    // Free Shipping Progress Bar ($50 threshold)
+    const FREE_SHIPPING_THRESHOLD = 50;
+    if (DOM.cartShippingProgressText && DOM.cartShippingFill) {
+      const pct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+      DOM.cartShippingFill.style.width = `${pct}%`;
+      if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+        DOM.cartShippingFill.classList.add('unlocked');
+        DOM.cartShippingProgressText.innerHTML = '¡Genial! Desbloqueaste <strong>envío gratis</strong>';
+      } else {
+        DOM.cartShippingFill.classList.remove('unlocked');
+        const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+        DOM.cartShippingProgressText.innerHTML = `Te faltan <strong>${formatMoney(remaining)}</strong> para envío gratis`;
+      }
+    }
+
     // Empty state or Items
     if (state.cart.length === 0) {
       DOM.cartEmptyState.classList.add('visible');
@@ -1154,16 +1361,74 @@
       if (e.target === DOM.successModal) closeSuccessModal();
     });
 
-    // Escape Key to close open modals
+    // Escape Key & Ctrl+K / Cmd+K Command Palette Shortcut
     document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openCmdPalette();
+        return;
+      }
       if (e.key === 'Escape') {
-        if (DOM.adminModal && DOM.adminModal.classList.contains('open')) closeAdminModal();
+        if (DOM.commandPaletteModal && DOM.commandPaletteModal.classList.contains('open')) closeCmdPalette();
+        else if (DOM.sizeGuideModal && DOM.sizeGuideModal.classList.contains('open')) closeSizeGuideModal();
+        else if (DOM.adminModal && DOM.adminModal.classList.contains('open')) closeAdminModal();
         else if (DOM.checkoutModal.classList.contains('open')) closeCheckoutModal();
         else if (DOM.productModal.classList.contains('open')) closeProductModal();
         else if (DOM.cartDrawer.classList.contains('open')) closeCartDrawer();
         else if (DOM.successModal.classList.contains('open')) closeSuccessModal();
       }
     });
+
+    // Size Guide Modal Listeners
+    if (DOM.openSizeGuideBtn) {
+      DOM.openSizeGuideBtn.addEventListener('click', openSizeGuideModal);
+    }
+    if (DOM.closeSizeGuideBtn) {
+      DOM.closeSizeGuideBtn.addEventListener('click', closeSizeGuideModal);
+    }
+    if (DOM.sizeGuideModal) {
+      DOM.sizeGuideModal.addEventListener('click', (e) => {
+        if (e.target === DOM.sizeGuideModal) closeSizeGuideModal();
+      });
+    }
+    if (DOM.sizeGuideTabs) {
+      DOM.sizeGuideTabs.querySelectorAll('.sg-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          DOM.sizeGuideTabs.querySelectorAll('.sg-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          sgState.category = tab.dataset.sgCat;
+          renderSizeGuideTable();
+        });
+      });
+    }
+    if (DOM.sizeGuideUnitToggle) {
+      DOM.sizeGuideUnitToggle.querySelectorAll('.sg-unit').forEach(btn => {
+        btn.addEventListener('click', () => {
+          DOM.sizeGuideUnitToggle.querySelectorAll('.sg-unit').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          sgState.unit = btn.dataset.unit;
+          renderSizeGuideTable();
+        });
+      });
+    }
+
+    // Command Palette Search Listeners
+    if (DOM.openCmdPaletteBtn) {
+      DOM.openCmdPaletteBtn.addEventListener('click', openCmdPalette);
+    }
+    if (DOM.closeCmdPaletteBtn) {
+      DOM.closeCmdPaletteBtn.addEventListener('click', closeCmdPalette);
+    }
+    if (DOM.commandPaletteModal) {
+      DOM.commandPaletteModal.addEventListener('click', (e) => {
+        if (e.target === DOM.commandPaletteModal) closeCmdPalette();
+      });
+    }
+    if (DOM.cmdPaletteInput) {
+      DOM.cmdPaletteInput.addEventListener('input', () => {
+        renderCmdPaletteResults(DOM.cmdPaletteInput.value);
+      });
+    }
 
     // Share product button — Web Share API (native mobile share sheet)
     const shareBtn = document.getElementById('shareProductBtn');
@@ -1654,6 +1919,129 @@
       DOM.adminSaveBtnText.style.display = 'inline';
       DOM.adminSaveSpinner.style.display = 'none';
     }
+  }
+
+  /* ==========================================================================
+     11.5 Interactive Size Guide & Command Palette Search
+     ========================================================================== */
+  const sgState = { category: 'tops', unit: 'cm' };
+
+  const SIZE_GUIDE_DATA = {
+    tops: {
+      headers: ['Talla', 'Pecho', 'Largo', 'Hombros'],
+      rows: [
+        ['S', 54, 70, 48],
+        ['M', 57, 72, 50],
+        ['L', 60, 74, 52],
+        ['XL', 63, 76, 54]
+      ]
+    },
+    pants: {
+      headers: ['Talla', 'Cintura', 'Largo Total', 'Entrepierna'],
+      rows: [
+        ['S (28-30)', 76, 100, 72],
+        ['M (31-32)', 82, 102, 74],
+        ['L (33-34)', 88, 104, 76],
+        ['XL (36)', 94, 106, 77]
+      ]
+    },
+    outerwear: {
+      headers: ['Talla', 'Pecho', 'Largo', 'Manga'],
+      rows: [
+        ['S', 56, 68, 62],
+        ['M', 59, 70, 64],
+        ['L', 62, 72, 66],
+        ['XL', 65, 74, 67]
+      ]
+    }
+  };
+
+  function formatMeasure(cmVal) {
+    if (sgState.unit === 'in') {
+      return `${(cmVal / 2.54).toFixed(1)} in`;
+    }
+    return `${cmVal} cm`;
+  }
+
+  function renderSizeGuideTable() {
+    if (!DOM.sizeGuideTableWrap) return;
+    const data = SIZE_GUIDE_DATA[sgState.category] || SIZE_GUIDE_DATA.tops;
+    const headersHTML = data.headers.map(h => `<th>${h}</th>`).join('');
+    const rowsHTML = data.rows.map(row =>
+      `<tr><td><strong>${row[0]}</strong></td>${row.slice(1).map(v => `<td>${formatMeasure(v)}</td>`).join('')}</tr>`
+    ).join('');
+    DOM.sizeGuideTableWrap.innerHTML = `<table class="sg-table"><thead><tr>${headersHTML}</tr></thead><tbody>${rowsHTML}</tbody></table>`;
+  }
+
+  function openSizeGuideModal() {
+    if (!DOM.sizeGuideModal) return;
+    renderSizeGuideTable();
+    DOM.sizeGuideModal.classList.add('open');
+    DOM.sizeGuideModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeSizeGuideModal() {
+    if (!DOM.sizeGuideModal) return;
+    DOM.sizeGuideModal.classList.remove('open');
+    DOM.sizeGuideModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function openCmdPalette() {
+    if (!DOM.commandPaletteModal) return;
+    DOM.commandPaletteModal.classList.add('open');
+    DOM.commandPaletteModal.setAttribute('aria-hidden', 'false');
+    if (DOM.cmdPaletteInput) {
+      DOM.cmdPaletteInput.value = '';
+      renderCmdPaletteResults('');
+      setTimeout(() => DOM.cmdPaletteInput.focus(), 40);
+    }
+  }
+
+  function closeCmdPalette() {
+    if (!DOM.commandPaletteModal) return;
+    DOM.commandPaletteModal.classList.remove('open');
+    DOM.commandPaletteModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function renderCmdPaletteResults(query) {
+    if (!DOM.cmdPaletteResults) return;
+    const q = (query || '').toLowerCase().trim();
+    const fallbackImg = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80';
+
+    const matches = (state.products || []).filter(p => {
+      if (!q) return true;
+      const cat = (p.categorias && p.categorias.nombre) ? p.categorias.nombre.toLowerCase() : '';
+      const colors = (p.variantes_producto || []).map(v => (v.color || '').toLowerCase()).join(' ');
+      return (p.nombre || '').toLowerCase().includes(q)
+        || (p.descripcion || '').toLowerCase().includes(q)
+        || cat.includes(q)
+        || colors.includes(q);
+    }).slice(0, 8);
+
+    if (matches.length === 0) {
+      DOM.cmdPaletteResults.innerHTML = `<div class="cmd-palette-empty">No encontramos prendas para "${escapeHTML(query)}".</div>`;
+      return;
+    }
+
+    DOM.cmdPaletteResults.innerHTML = '';
+    matches.forEach(prod => {
+      const cat = (prod.categorias && prod.categorias.nombre) ? prod.categorias.nombre : 'Colección';
+      const item = document.createElement('div');
+      item.className = 'cmd-result-item';
+      item.innerHTML = `
+        <img src="${prod.imagen_url || fallbackImg}" alt="${escapeHTML(prod.nombre)}" class="cmd-result-thumb" onerror="this.src='${fallbackImg}'">
+        <div class="cmd-result-meta">
+          <div class="cmd-result-title">${escapeHTML(prod.nombre)}</div>
+          <div class="cmd-result-cat">${escapeHTML(cat)}</div>
+        </div>
+        <div class="cmd-result-price">${formatMoney(prod.precio)}</div>
+      `;
+      item.addEventListener('click', () => {
+        closeCmdPalette();
+        openProductModal(prod);
+      });
+      DOM.cmdPaletteResults.appendChild(item);
+    });
   }
 
   /* ==========================================================================
