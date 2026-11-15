@@ -322,6 +322,15 @@
           <div><strong>Dirección:</strong> ${escapeHTML(order.direccion_envio)}</div>
         </div>
         <div class="order-items-box">${itemsHTML || 'Sin detalle de ítems'}</div>
+        ${order.comprobante_url ? `
+          <div class="order-receipt-row">
+            <div class="order-receipt-thumb-wrap">
+              <img src="${escapeHTML(order.comprobante_url)}" alt="Comprobante" class="order-receipt-thumb">
+              <span>Comprobante adjunto</span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm btn-view-receipt">Ver Comprobante</button>
+          </div>
+        ` : ''}
         <div class="order-card-footer">
           <span class="order-total">${formatMoney(order.total)}</span>
           <div class="order-controls">
@@ -334,6 +343,11 @@
           </div>
         </div>
       `;
+
+      const receiptBtn = card.querySelector('.btn-view-receipt');
+      if (receiptBtn) {
+        receiptBtn.addEventListener('click', () => openReceiptModal(order));
+      }
 
       card.querySelector('.btn-toggle-paid').addEventListener('click', async () => {
         const nextPaid = order.estado_pago === 'pagado' ? 'pendiente' : 'pagado';
@@ -720,6 +734,24 @@
     await loadAllData();
   }
 
+  let activeReceiptOrder = null;
+
+  function openReceiptModal(order) {
+    activeReceiptOrder = order;
+    $('receiptModalTitle').textContent = `Comprobante · Pedido #ORD-${order.id}`;
+    $('receiptModalImg').src = order.comprobante_url;
+    $('receiptMarkPaidBtn').textContent = order.estado_pago === 'pagado' ? 'Ya está Pagado' : 'Marcar como Pagado';
+    $('receiptMarkPaidBtn').disabled = order.estado_pago === 'pagado';
+    $('receiptModal').classList.add('open');
+    $('receiptModal').setAttribute('aria-hidden', 'false');
+  }
+
+  function closeReceiptModal() {
+    activeReceiptOrder = null;
+    $('receiptModal').classList.remove('open');
+    $('receiptModal').setAttribute('aria-hidden', 'true');
+  }
+
   /* ==========================================================================
      Event Listeners & Init
      ========================================================================== */
@@ -766,6 +798,26 @@
     });
     $('productForm').addEventListener('submit', handleSaveProduct);
     $('newCategoryForm').addEventListener('submit', handleNewCategory);
+
+    if ($('closeReceiptModal')) {
+      $('closeReceiptModal').addEventListener('click', closeReceiptModal);
+    }
+    if ($('receiptModal')) {
+      $('receiptModal').addEventListener('click', (e) => {
+        if (e.target === $('receiptModal')) closeReceiptModal();
+      });
+    }
+    if ($('receiptMarkPaidBtn')) {
+      $('receiptMarkPaidBtn').addEventListener('click', async () => {
+        if (!activeReceiptOrder) return;
+        const { error } = await supabase.from('pedidos').update({ estado_pago: 'pagado' }).eq('id', activeReceiptOrder.id);
+        if (error) return showToast('Error al marcar pagado', 'error');
+        activeReceiptOrder.estado_pago = 'pagado';
+        showToast(`Pedido #ORD-${activeReceiptOrder.id} marcado como Pagado`, 'success');
+        closeReceiptModal();
+        renderOrders();
+      });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {

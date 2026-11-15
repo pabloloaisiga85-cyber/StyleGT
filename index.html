@@ -60,7 +60,7 @@
   </script>
 
   <!-- Main Stylesheet (con version para forzar refresco en móviles) -->
-  <link rel="stylesheet" href="style.css?v=3.6">
+  <link rel="stylesheet" href="style.css?v=3.8">
 </head>
 
 <body>
@@ -594,9 +594,27 @@
         <div id="bankTransferBox" class="bank-transfer-box" style="display: none;">
           <div class="bank-transfer-header">
             <i data-lucide="info" class="icon-xs"></i>
-            <span>Realiza la transferencia y envía tu comprobante al finalizar:</span>
+            <span>Transfiere a una de estas cuentas y sube la foto del comprobante aquí:</span>
           </div>
           <div id="bankAccountsList" class="bank-accounts-list"></div>
+
+          <!-- Upload Receipt Photo directly in Checkout -->
+          <div class="receipt-upload-block" id="transferReceiptUpload">
+            <label for="comprobanteFileInput" class="receipt-dropzone" id="comprobanteDropzone">
+              <i data-lucide="upload-cloud" class="icon-md"></i>
+              <span class="receipt-drop-title">Subir foto o captura del comprobante *</span>
+              <span class="receipt-drop-sub">JPG, PNG o WEBP desde tu galería</span>
+              <input type="file" id="comprobanteFileInput" accept="image/*" hidden>
+            </label>
+            <div class="receipt-preview-box" id="comprobantePreviewBox" style="display: none;">
+              <img id="comprobantePreviewImg" src="" alt="Comprobante" class="receipt-preview-thumb">
+              <div class="receipt-preview-meta">
+                <strong id="comprobanteFileName">comprobante.jpg</strong>
+                <span>Listo para enviar con tu pedido</span>
+              </div>
+              <button type="button" id="removeComprobanteBtn" class="btn-copy-account">Quitar</button>
+            </div>
+          </div>
         </div>
 
         <!-- Checkout Total breakdown -->
@@ -644,10 +662,10 @@
       </div>
 
       <div id="successTransferAction" class="success-transfer-action" style="display: none;">
-        <p class="transfer-reminder">Para confirmar el envío de tu pedido, envíanos el comprobante de tu transferencia:</p>
+        <p class="transfer-reminder">¡Comprobante adjuntado! El administrador lo verificará de inmediato. Si tienes dudas, escríbenos:</p>
         <a id="sendReceiptWhatsAppBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp-receipt btn-block">
           <i data-lucide="message-circle" class="icon-sm"></i>
-          <span>Enviar Comprobante por WhatsApp</span>
+          <span>Consultar por WhatsApp</span>
         </a>
       </div>
 
@@ -937,7 +955,7 @@
   </div>
 
   <!-- Main JavaScript App -->
-  <script src="app.js?v=3.7"></script>
+  <script src="app.js?v=3.8"></script>
 </body>
 
 </html>

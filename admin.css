@@ -1015,3 +1015,50 @@ html, body {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* Order Receipt Preview & Lightbox in Admin */
+.order-receipt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.order-receipt-thumb-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.order-receipt-thumb {
+  width: 34px;
+  height: 42px;
+  border-radius: 5px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.receipt-modal-card {
+  max-width: 520px;
+}
+
+.receipt-modal-body {
+  display: flex;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.receipt-modal-img {
+  max-width: 100%;
+  max-height: 68vh;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+}

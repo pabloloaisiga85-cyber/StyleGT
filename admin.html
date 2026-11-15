@@ -27,7 +27,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <link rel="stylesheet" href="admin.css?v=1.7">
+  <link rel="stylesheet" href="admin.css?v=1.9">
 </head>
 
 <body>
@@ -335,10 +335,28 @@
     </div>
   </div>
 
+  <!-- Receipt Lightbox Modal -->
+  <div id="receiptModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card receipt-modal-card">
+      <div class="modal-header">
+        <h2 id="receiptModalTitle">Comprobante de Pago</h2>
+        <button type="button" id="closeReceiptModal" class="icon-btn" aria-label="Cerrar">
+          <i data-lucide="x" class="icon-sm"></i>
+        </button>
+      </div>
+      <div class="modal-body receipt-modal-body">
+        <img id="receiptModalImg" src="" alt="Comprobante de transferencia" class="receipt-modal-img">
+      </div>
+      <div class="modal-footer" style="padding: 1rem 1.4rem; margin-top: 0;">
+        <button type="button" id="receiptMarkPaidBtn" class="btn btn-primary">Marcar como Pagado</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="admin.js?v=1.8"></script>
+  <script src="admin.js?v=1.9"></script>
 </body>
 
 </html>

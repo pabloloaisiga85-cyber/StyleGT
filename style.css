@@ -4324,3 +4324,80 @@ html.theme-transitioning * {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Receipt Photo Upload inside Bank Transfer Box */
+.receipt-upload-block {
+  margin-top: 0.75rem;
+}
+
+.receipt-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.95rem 0.75rem;
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.receipt-dropzone:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-hover);
+}
+
+.receipt-drop-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.receipt-drop-sub {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.receipt-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.06);
+  border-radius: var(--radius-md);
+}
+
+.receipt-preview-thumb {
+  width: 44px;
+  height: 54px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+}
+
+.receipt-preview-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.receipt-preview-meta strong {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.receipt-preview-meta span {
+  font-size: 0.72rem;
+  color: var(--color-success);
+  font-weight: 600;
+}

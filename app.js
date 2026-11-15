@@ -177,6 +177,12 @@
     bankAccountsList: document.getElementById('bankAccountsList'),
     successTransferAction: document.getElementById('successTransferAction'),
     sendReceiptWhatsAppBtn: document.getElementById('sendReceiptWhatsAppBtn'),
+    comprobanteFileInput: document.getElementById('comprobanteFileInput'),
+    comprobanteDropzone: document.getElementById('comprobanteDropzone'),
+    comprobantePreviewBox: document.getElementById('comprobantePreviewBox'),
+    comprobantePreviewImg: document.getElementById('comprobantePreviewImg'),
+    comprobanteFileName: document.getElementById('comprobanteFileName'),
+    removeComprobanteBtn: document.getElementById('removeComprobanteBtn'),
 
     // Admin Dashboard
     openAdminBtn: document.getElementById('openAdminBtn'),
@@ -1247,6 +1253,15 @@
       return;
     }
 
+    const selectedMethodInput = document.querySelector('input[name="metodoPago"]:checked');
+    const metodoPago = selectedMethodInput ? selectedMethodInput.value : 'contra_entrega';
+    const receiptFile = DOM.comprobanteFileInput && DOM.comprobanteFileInput.files[0];
+
+    if (metodoPago === 'transferencia' && !receiptFile) {
+      showToast('Por favor adjunta la foto o captura de tu comprobante de transferencia', 'error');
+      return;
+    }
+
     const { total } = getCartTotals();
 
     // Set loading button state
@@ -1255,6 +1270,20 @@
     DOM.submitOrderSpinner.style.display = 'block';
 
     try {
+      // Upload receipt first if Transferencia is selected
+      let comprobanteUrl = null;
+      if (metodoPago === 'transferencia' && receiptFile) {
+        const ext = (receiptFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const fileName = `comp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${ext || 'jpg'}`;
+        const { error: upErr } = await supabase.storage
+          .from('comprobantes')
+          .upload(fileName, receiptFile, { contentType: receiptFile.type || 'image/jpeg', upsert: false });
+
+        if (upErr) throw upErr;
+        const { data: pubData } = supabase.storage.from('comprobantes').getPublicUrl(fileName);
+        comprobanteUrl = pubData.publicUrl;
+      }
+
       // Single atomic RPC call: inserts pedido + items + decrements stock in one transaction.
       // If stock is insufficient for any variant, the DB raises an exception and nothing is committed.
       const itemsPayload = state.cart.map(item => ({
@@ -1281,14 +1310,12 @@
         return;
       }
 
-      const selectedMethodInput = document.querySelector('input[name="metodoPago"]:checked');
-      const metodoPago = selectedMethodInput ? selectedMethodInput.value : 'contra_entrega';
-
-      // Save payment method safely (backward compatible if SQL migration hasn't run yet)
+      // Save payment method + receipt URL safely
       try {
         await supabase.rpc('registrar_metodo_pago', {
           p_pedido_id: result.id,
-          p_metodo: metodoPago
+          p_metodo: metodoPago,
+          p_comprobante_url: comprobanteUrl
         });
       } catch (_) {}
 
@@ -1300,12 +1327,22 @@
         telefono: telefono,
         direccion_envio: direccion,
         total: parseFloat(total.toFixed(2)),
-        metodo_pago: metodoPago
+        metodo_pago: metodoPago,
+        comprobante_url: comprobanteUrl
       };
 
       state.cart = [];
       saveCart();
       DOM.checkoutForm.reset();
+      if (DOM.comprobanteFileInput) DOM.comprobanteFileInput.value = '';
+      if (DOM.comprobantePreviewBox) DOM.comprobantePreviewBox.style.display = 'none';
+      if (DOM.comprobanteDropzone) DOM.comprobanteDropzone.style.display = 'flex';
+      if (DOM.bankTransferBox) DOM.bankTransferBox.style.display = 'none';
+      if (DOM.paymentMethodGroup) {
+        DOM.paymentMethodGroup.querySelectorAll('.payment-option-card').forEach((card, i) => {
+          card.classList.toggle('active', i === 0);
+        });
+      }
       closeCheckoutModal();
       openSuccessModal(pedidoData, placedCart);
       showToast('¡Pedido registrado con éxito!', 'success');
@@ -1550,6 +1587,26 @@
           });
           DOM.bankTransferBox.style.display = radio.value === 'transferencia' ? 'block' : 'none';
         });
+      });
+    }
+
+    // Receipt Photo Preview & Clear
+    if (DOM.comprobanteFileInput) {
+      DOM.comprobanteFileInput.addEventListener('change', () => {
+        const file = DOM.comprobanteFileInput.files[0];
+        if (!file) return;
+        if (DOM.comprobanteFileName) DOM.comprobanteFileName.textContent = file.name;
+        if (DOM.comprobantePreviewImg) DOM.comprobantePreviewImg.src = URL.createObjectURL(file);
+        if (DOM.comprobanteDropzone) DOM.comprobanteDropzone.style.display = 'none';
+        if (DOM.comprobantePreviewBox) DOM.comprobantePreviewBox.style.display = 'flex';
+      });
+    }
+    if (DOM.removeComprobanteBtn) {
+      DOM.removeComprobanteBtn.addEventListener('click', () => {
+        if (DOM.comprobanteFileInput) DOM.comprobanteFileInput.value = '';
+        if (DOM.comprobantePreviewImg) DOM.comprobantePreviewImg.src = '';
+        if (DOM.comprobantePreviewBox) DOM.comprobantePreviewBox.style.display = 'none';
+        if (DOM.comprobanteDropzone) DOM.comprobanteDropzone.style.display = 'flex';
       });
     }
 
