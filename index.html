@@ -60,7 +60,7 @@
   </script>
 
   <!-- Main Stylesheet (con version para forzar refresco en móviles) -->
-  <link rel="stylesheet" href="style.css?v=3.9">
+  <link rel="stylesheet" href="style.css?v=4.0">
 </head>
 
 <body>
@@ -977,12 +977,12 @@
       <form id="trackOrderForm" class="track-order-form">
         <div class="track-form-grid">
           <div class="form-group">
-            <label for="trackOrderIdInput">Número de Pedido</label>
-            <input type="text" id="trackOrderIdInput" placeholder="Ej: #ORD-4 o 4" required autocomplete="off">
+            <label class="form-label" for="trackOrderIdInput">Número de Pedido</label>
+            <input class="form-input track-input" type="text" id="trackOrderIdInput" placeholder="Ej: #ORD-4 o 4" required autocomplete="off">
           </div>
           <div class="form-group">
-            <label for="trackOrderPhoneInput">Teléfono</label>
-            <input type="tel" id="trackOrderPhoneInput" placeholder="Ej: 55676634" required autocomplete="tel">
+            <label class="form-label" for="trackOrderPhoneInput">Teléfono</label>
+            <input class="form-input track-input" type="tel" id="trackOrderPhoneInput" placeholder="Ej: 55676634" required autocomplete="tel">
           </div>
         </div>
         <button type="submit" id="trackOrderSubmitBtn" class="btn btn-primary btn-block">

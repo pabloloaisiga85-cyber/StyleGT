@@ -4411,7 +4411,7 @@ html.theme-transitioning * {
   border-radius: 999px;
   border: 1px solid var(--color-border);
   background: var(--color-surface);
-  color: var(--color-text);
+  color: var(--color-text-main);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
@@ -4455,6 +4455,20 @@ html.theme-transitioning * {
   grid-template-columns: 1fr 1fr;
   gap: 0.85rem;
   margin-bottom: 0.9rem;
+}
+
+.track-input {
+  padding: 0.72rem 0.9rem !important;
+  background-color: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-main);
+}
+
+.track-input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
 }
 
 @media (max-width: 560px) {
