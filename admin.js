@@ -366,22 +366,34 @@
       const catName = p.categorias?.nombre || 'Sin categoría';
 
       // Check stock alert levels
-      const hasOutOfStock = variants.some(v => Number(v.stock) === 0);
-      const hasLowStock = variants.some(v => Number(v.stock) > 0 && Number(v.stock) <= 3);
+      const outOfStockVars = variants.filter(v => Number(v.stock) === 0);
+      const lowStockVars = variants.filter(v => Number(v.stock) > 0 && Number(v.stock) <= 3);
 
       let stockHTML = `<span>${totalStock} uds</span>`;
-      if (totalStock === 0 || hasOutOfStock) {
+      let alertHint = '';
+
+      if (totalStock === 0 || outOfStockVars.length > 0) {
+        const outList = outOfStockVars.map(v => `${v.color} (${v.talla})`).join(', ');
+        alertHint = `<div class="stock-warn-detail stock-warn-text-out">Agotado: ${escapeHTML(outList)}</div>`;
         stockHTML = `
-          <div class="stock-pill-indicator stock-warn-text-out" title="Variante agotada">
-            <span class="stock-beacon stock-beacon-out"></span>
-            <span>${totalStock} uds (Agotado)</span>
+          <div class="stock-cell-wrap">
+            <div class="stock-pill-indicator stock-warn-text-out">
+              <span class="stock-beacon stock-beacon-out"></span>
+              <span>${totalStock} uds</span>
+            </div>
+            ${alertHint}
           </div>
         `;
-      } else if (hasLowStock) {
+      } else if (lowStockVars.length > 0) {
+        const lowList = lowStockVars.map(v => `${v.color} (${v.talla}): ${v.stock}u`).join(', ');
+        alertHint = `<div class="stock-warn-detail stock-warn-text-low">Bajo stock: ${escapeHTML(lowList)}</div>`;
         stockHTML = `
-          <div class="stock-pill-indicator stock-warn-text-low" title="Stock bajo (≤ 3 uds)">
-            <span class="stock-beacon stock-beacon-low"></span>
-            <span>${totalStock} uds (Bajo)</span>
+          <div class="stock-cell-wrap">
+            <div class="stock-pill-indicator stock-warn-text-low">
+              <span class="stock-beacon stock-beacon-low"></span>
+              <span>${totalStock} uds</span>
+            </div>
+            ${alertHint}
           </div>
         `;
       }
@@ -422,12 +434,20 @@
   function addVariantRow(v = { id: '', color: '', talla: 'M', stock: 5 }) {
     const container = $('variantRowsContainer');
     const row = document.createElement('div');
-    row.className = 'variant-row';
+    const stockNum = Number(v.stock ?? 0);
+    const isOut = stockNum === 0;
+    const isLow = stockNum > 0 && stockNum <= 3;
+
+    row.className = `variant-row ${isOut ? 'variant-row-out' : (isLow ? 'variant-row-low' : '')}`;
     row.dataset.variantId = v.id || '';
     row.innerHTML = `
-      <input type="text" class="form-input var-color" placeholder="Color (ej. Negro)" value="${escapeHTML(v.color)}" required>
+      <div class="variant-input-with-beacon">
+        ${isOut ? '<span class="stock-beacon stock-beacon-out" title="Agotado"></span>' : ''}
+        ${isLow ? '<span class="stock-beacon stock-beacon-low" title="Bajo stock (≤ 3)"></span>' : ''}
+        <input type="text" class="form-input var-color" placeholder="Color (ej. Negro)" value="${escapeHTML(v.color)}" required>
+      </div>
       <input type="text" class="form-input var-talla" placeholder="Talla (M)" value="${escapeHTML(v.talla)}" required>
-      <input type="number" class="form-input var-stock" min="0" placeholder="Stock" value="${Number(v.stock ?? 0)}" required>
+      <input type="number" class="form-input var-stock ${isOut ? 'input-warn-out' : (isLow ? 'input-warn-low' : '')}" min="0" placeholder="Stock" value="${stockNum}" required>
       <button type="button" class="icon-btn btn-remove-var" title="Quitar variante">
         <i data-lucide="trash-2" class="icon-xs"></i>
       </button>

@@ -665,3 +665,53 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   color: #d97706;
   font-weight: 700;
 }
+
+
+/* Variant Row Alert Badges & Table Detail */
+.stock-cell-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stock-warn-detail {
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.variant-input-with-beacon {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.variant-row-out {
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.4rem;
+}
+
+.variant-row-low {
+  background: rgba(245, 158, 11, 0.05);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.4rem;
+}
+
+.input-warn-out {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+  font-weight: 800;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.input-warn-low {
+  border-color: #f59e0b !important;
+  color: #b45309 !important;
+  font-weight: 800;
+  background: rgba(245, 158, 11, 0.08) !important;
+}
+
+[data-theme="dark"] .input-warn-low {
+  color: #fbbf24 !important;
+}
