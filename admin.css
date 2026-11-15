@@ -715,3 +715,75 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
 [data-theme="dark"] .input-warn-low {
   color: #fbbf24 !important;
 }
+
+
+/* ==========================================================================
+   Visual Stock Chips (Color Dot + Size + Qty) & Low-Stock Filter Pill
+   ========================================================================== */
+.pill-alert-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+}
+
+.pill-alert-filter.active {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+.stock-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+
+.stock-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.stock-chip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  border: 1px solid rgba(17, 17, 17, 0.22);
+  flex-shrink: 0;
+}
+
+.stock-chip-out {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+}
+
+.stock-chip-low {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.08);
+  color: #b45309;
+}
+
+[data-theme="dark"] .stock-chip-low {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .stock-chip-dot {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.low-stock-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}

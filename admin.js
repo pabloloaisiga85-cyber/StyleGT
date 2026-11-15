@@ -14,11 +14,26 @@
     orders: [],
     activeTab: 'resumen',
     orderStatusFilter: 'all',
+    onlyLowStock: false,
     croppedBlob: null,
     cropper: null
   };
 
   const $ = (id) => document.getElementById(id);
+
+  function getColorHex(colorName) {
+    if (!colorName) return '#cccccc';
+    const c = colorName.toLowerCase().trim();
+    if (c.includes('blanco')) return '#ffffff';
+    if (c.includes('negro')) return '#1a1a1a';
+    if (c.includes('gris') || c.includes('melange') || c.includes('carbón')) return '#6b7280';
+    if (c.includes('verde') || c.includes('oliva')) return '#4d7c0f';
+    if (c.includes('beige') || c.includes('arena')) return '#d4c5b9';
+    if (c.includes('camel') || c.includes('café') || c.includes('marrón')) return '#b45309';
+    if (c.includes('azul') || c.includes('marino')) return '#1e3a8a';
+    if (c.includes('rojo') || c.includes('vino')) return '#991b1b';
+    return '#94a3b8';
+  }
 
   function escapeHTML(str) {
     const div = document.createElement('div');
@@ -235,18 +250,23 @@
     }
 
     list.innerHTML = '';
-    lowStockItems.slice(0, 10).forEach(({ product, variant }) => {
+    lowStockItems.slice(0, 12).forEach(({ product, variant }) => {
       const row = document.createElement('div');
       row.className = 'list-row';
       row.innerHTML = `
-        <div>
+        <div style="display:flex; align-items:center; gap:0.55rem; flex-wrap:wrap;">
+          <span class="stock-chip-dot" style="background-color:${getColorHex(variant.color)};" title="${escapeHTML(variant.color)}"></span>
           <strong>${escapeHTML(product.nombre)}</strong>
-          <span style="color: var(--text-muted);"> · ${escapeHTML(variant.talla)} / ${escapeHTML(variant.color)}</span>
+          <span style="color: var(--text-muted);">${escapeHTML(variant.color)} · Talla ${escapeHTML(variant.talla)}</span>
         </div>
-        <span class="status-badge ${variant.stock === 0 ? 'status-paused' : 'status-pendiente'}">
-          ${variant.stock === 0 ? 'Agotado' : `${variant.stock} uds`}
-        </span>
+        <div class="low-stock-row-actions">
+          <span class="status-badge ${variant.stock === 0 ? 'status-paused' : 'status-pendiente'}">
+            ${variant.stock === 0 ? 'Agotado' : `${variant.stock} uds`}
+          </span>
+          <button type="button" class="btn btn-secondary btn-sm btn-restock-now">Reponer</button>
+        </div>
       `;
+      row.querySelector('.btn-restock-now').addEventListener('click', () => openProductModal(product));
       list.appendChild(row);
     });
   }
@@ -348,10 +368,18 @@
     const q = $('prodSearchInput').value.toLowerCase().trim();
     const catId = $('prodCatFilter').value;
 
+    const lowStockProductsCount = state.products.filter(p =>
+      (p.variantes_producto || []).some(v => Number(v.stock) <= 3)
+    ).length;
+    if ($('prodLowStockCount')) {
+      $('prodLowStockCount').textContent = lowStockProductsCount;
+    }
+
     const filtered = state.products.filter(p => {
       const matchCat = catId === 'all' || String(p.categoria_id) === String(catId);
       const matchQ = !q || (p.nombre || '').toLowerCase().includes(q);
-      return matchCat && matchQ;
+      const matchLow = !state.onlyLowStock || (p.variantes_producto || []).some(v => Number(v.stock) <= 3);
+      return matchCat && matchQ && matchLow;
     });
 
     if (filtered.length === 0) {
@@ -368,32 +396,28 @@
       // Check stock alert levels
       const outOfStockVars = variants.filter(v => Number(v.stock) === 0);
       const lowStockVars = variants.filter(v => Number(v.stock) > 0 && Number(v.stock) <= 3);
+      const alertVars = [...outOfStockVars, ...lowStockVars];
 
       let stockHTML = `<span>${totalStock} uds</span>`;
-      let alertHint = '';
+      if (alertVars.length > 0 || totalStock === 0) {
+        const isCritical = totalStock === 0 || outOfStockVars.length > 0;
+        const chipsHTML = alertVars.map(v => {
+          const isZero = Number(v.stock) === 0;
+          return `
+            <span class="stock-chip ${isZero ? 'stock-chip-out' : 'stock-chip-low'}" title="${escapeHTML(v.color)} · Talla ${escapeHTML(v.talla)}">
+              <span class="stock-chip-dot" style="background-color:${getColorHex(v.color)};"></span>
+              <span>${escapeHTML(v.color)} · ${escapeHTML(v.talla)}: ${isZero ? '0u' : `${v.stock}u`}</span>
+            </span>
+          `;
+        }).join('');
 
-      if (totalStock === 0 || outOfStockVars.length > 0) {
-        const outList = outOfStockVars.map(v => `${v.color} (${v.talla})`).join(', ');
-        alertHint = `<div class="stock-warn-detail stock-warn-text-out">Agotado: ${escapeHTML(outList)}</div>`;
         stockHTML = `
           <div class="stock-cell-wrap">
-            <div class="stock-pill-indicator stock-warn-text-out">
-              <span class="stock-beacon stock-beacon-out"></span>
+            <div class="stock-pill-indicator ${isCritical ? 'stock-warn-text-out' : 'stock-warn-text-low'}">
+              <span class="stock-beacon ${isCritical ? 'stock-beacon-out' : 'stock-beacon-low'}"></span>
               <span>${totalStock} uds</span>
             </div>
-            ${alertHint}
-          </div>
-        `;
-      } else if (lowStockVars.length > 0) {
-        const lowList = lowStockVars.map(v => `${v.color} (${v.talla}): ${v.stock}u`).join(', ');
-        alertHint = `<div class="stock-warn-detail stock-warn-text-low">Bajo stock: ${escapeHTML(lowList)}</div>`;
-        stockHTML = `
-          <div class="stock-cell-wrap">
-            <div class="stock-pill-indicator stock-warn-text-low">
-              <span class="stock-beacon stock-beacon-low"></span>
-              <span>${totalStock} uds</span>
-            </div>
-            ${alertHint}
+            ${chipsHTML ? `<div class="stock-chips-list">${chipsHTML}</div>` : ''}
           </div>
         `;
       }
@@ -703,6 +727,13 @@
 
     $('prodSearchInput').addEventListener('input', renderProductsTable);
     $('prodCatFilter').addEventListener('change', renderProductsTable);
+    if ($('prodLowStockFilterBtn')) {
+      $('prodLowStockFilterBtn').addEventListener('click', () => {
+        state.onlyLowStock = !state.onlyLowStock;
+        $('prodLowStockFilterBtn').classList.toggle('active', state.onlyLowStock);
+        renderProductsTable();
+      });
+    }
     $('newProductBtn').addEventListener('click', () => openProductModal(null));
     $('closeProductFormModal').addEventListener('click', closeProductModal);
     $('cancelProductFormBtn').addEventListener('click', closeProductModal);

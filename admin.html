@@ -27,7 +27,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <link rel="stylesheet" href="admin.css?v=1.3">
+  <link rel="stylesheet" href="admin.css?v=1.4">
 </head>
 
 <body>
@@ -200,6 +200,10 @@
             <select id="prodCatFilter" class="form-select">
               <option value="all">Todas las categorías</option>
             </select>
+            <button type="button" id="prodLowStockFilterBtn" class="pill pill-alert-filter" title="Filtrar solo prendas con stock bajo o agotado">
+              <span class="stock-beacon stock-beacon-out" style="width:7px;height:7px;"></span>
+              <span>Stock Bajo (<span id="prodLowStockCount">0</span>)</span>
+            </button>
           </div>
           <button type="button" id="newProductBtn" class="btn btn-primary">
             <i data-lucide="plus" class="icon-sm"></i>
@@ -334,7 +338,7 @@
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="admin.js?v=1.0"></script>
+  <script src="admin.js?v=1.4"></script>
 </body>
 
 </html>
