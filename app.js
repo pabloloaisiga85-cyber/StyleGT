@@ -1602,6 +1602,19 @@
       DOM.cmdPaletteInput.addEventListener('input', () => {
         renderCmdPaletteResults(DOM.cmdPaletteInput.value);
       });
+      DOM.cmdPaletteInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          DOM.cmdPaletteInput.blur();
+        }
+      });
+    }
+    if (DOM.cmdPaletteResults) {
+      DOM.cmdPaletteResults.addEventListener('touchstart', () => {
+        if (document.activeElement === DOM.cmdPaletteInput) {
+          DOM.cmdPaletteInput.blur();
+        }
+      }, { passive: true });
     }
 
     // Share product button — Web Share API (native mobile share sheet)
