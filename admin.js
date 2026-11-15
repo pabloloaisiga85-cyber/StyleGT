@@ -69,10 +69,33 @@
     if (window.lucide) window.lucide.createIcons();
   }
 
-  function showDashboard() {
+  function playWelcomeAnimation(callback) {
+    const splash = $('welcomeSplash');
+    if (!splash) {
+      if (callback) callback();
+      return;
+    }
+    splash.style.display = 'flex';
+    splash.classList.remove('fade-out');
+
+    // Display for 1.1s, then fluid fade out in 0.4s
+    setTimeout(() => {
+      splash.classList.add('fade-out');
+      setTimeout(() => {
+        splash.style.display = 'none';
+        splash.classList.remove('fade-out');
+        if (callback) callback();
+      }, 420);
+    }, 1100);
+  }
+
+  function showDashboard(withWelcome = false) {
     $('authView').style.display = 'none';
     $('dashboardView').style.display = 'grid';
     if (window.lucide) window.lucide.createIcons();
+    if (withWelcome) {
+      playWelcomeAnimation();
+    }
   }
 
   async function handleLogin(e) {
@@ -96,7 +119,7 @@
       return;
     }
 
-    showDashboard();
+    showDashboard(true);
     await loadAllData();
   }
 

@@ -27,10 +27,22 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <link rel="stylesheet" href="admin.css?v=1.0">
+  <link rel="stylesheet" href="admin.css?v=1.1">
 </head>
 
 <body>
+
+  <!-- Welcome Splash Animation -->
+  <div id="welcomeSplash" class="welcome-splash" style="display: none;" aria-hidden="true">
+    <div class="welcome-content">
+      <div class="welcome-logo-wrap">
+        <img src="logo-icon.png" alt="StyleGT" class="brand-logo-img welcome-logo">
+      </div>
+      <div class="welcome-badge">Panel de Control</div>
+      <h2 class="welcome-title">Bienvenido</h2>
+      <div class="welcome-bar"><span class="welcome-bar-fill"></span></div>
+    </div>
+  </div>
 
   <!-- 1. Auth Screen (Supabase Auth) -->
   <section id="authView" class="auth-view">
