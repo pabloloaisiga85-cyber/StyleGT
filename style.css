@@ -2725,13 +2725,75 @@ a i, a svg,
    Hydrogen Editorial Lookbook Upgrade (Modelo 1)
    ========================================================================== */
 
-/* Floating Glassmorphic Navbar */
+/* Floating Glassmorphic Navbar (Modelo 1 Editorial) */
+.announcement-bar {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.45rem 1rem;
+}
+
 .navbar {
-  background: rgba(255, 255, 255, 0.78) !important;
-  backdrop-filter: blur(18px) saturate(180%);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
-  border-bottom: 1px solid rgba(17, 17, 17, 0.06);
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+  position: sticky;
+  top: 12px;
+  z-index: 100;
+  width: calc(100% - 2rem);
+  max-width: var(--max-width);
+  margin: 12px auto 0;
+  height: 62px;
+  border-radius: 16px;
+  background: rgba(248, 248, 248, 0.76) !important;
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(17, 17, 17, 0.08) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.navbar .navbar-container {
+  padding: 0 1.35rem;
+}
+
+.navbar .nav-links {
+  gap: 2.1rem;
+}
+
+.navbar .nav-link {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.navbar .nav-link.active,
+.navbar .nav-link:hover {
+  color: var(--color-primary);
+}
+
+.navbar .search-box {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  height: 36px;
+  padding: 0 0.65rem;
+}
+
+.navbar .search-box input {
+  font-size: 0.8rem;
+  width: 125px;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    top: 8px;
+    width: calc(100% - 1rem);
+    margin: 8px auto 0;
+    height: 56px;
+    border-radius: 14px;
+  }
+  .navbar .navbar-container {
+    padding: 0 0.85rem;
+  }
 }
 
 .cmd-k-badge {
