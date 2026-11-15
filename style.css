@@ -449,7 +449,7 @@ a i, a svg,
   overflow: hidden;
   box-shadow: var(--shadow-xl);
   aspect-ratio: 4 / 3.4;
-  background-color: #171717;
+  background-color: #ffffff;
   cursor: pointer;
   user-select: none;
   touch-action: pan-y;
