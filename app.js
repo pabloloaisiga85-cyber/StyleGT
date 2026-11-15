@@ -1466,6 +1466,16 @@
   /* ==========================================================================
      9b. Order Tracking (Seguimiento de Pedido)
      ========================================================================== */
+  let trackPollTimer = null;
+  let lastTrackedQuery = null;
+
+  function stopTrackPolling() {
+    if (trackPollTimer) {
+      clearInterval(trackPollTimer);
+      trackPollTimer = null;
+    }
+  }
+
   function openTrackOrderModal() {
     if (!DOM.trackOrderModal) return;
     DOM.trackOrderModal.classList.add('open');
@@ -1478,6 +1488,7 @@
   }
 
   function closeTrackOrderModal() {
+    stopTrackPolling();
     if (!DOM.trackOrderModal) return;
     DOM.trackOrderModal.classList.remove('open');
     DOM.trackOrderModal.setAttribute('aria-hidden', 'true');
@@ -1545,7 +1556,13 @@
             <div class="track-order-code">#ORD-${order.id}</div>
             <div class="track-order-meta">${escapeHTML(order.nombre_cliente)} · ${dateStr}</div>
           </div>
-          ${paymentBadge}
+          <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+            ${paymentBadge}
+            <button type="button" id="trackRefreshBtn" class="track-refresh-btn" title="Actualizar estado ahora">
+              <i data-lucide="refresh-cw" class="icon-xs"></i>
+              <span>Actualizar</span>
+            </button>
+          </div>
         </div>
         ${timelineHtml}
         <div class="track-items-box">
@@ -1562,7 +1579,25 @@
       </div>
     `;
     DOM.trackOrderResult.style.display = 'block';
+    const refreshBtn = document.getElementById('trackRefreshBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => refreshTrackedOrder(true));
+    }
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  async function refreshTrackedOrder(showFeedback = false) {
+    if (!lastTrackedQuery) return;
+    try {
+      const { data, error } = await supabase.rpc('consultar_pedido', {
+        p_id: lastTrackedQuery.orderId,
+        p_telefono: lastTrackedQuery.rawPhone
+      });
+      if (!error && data) {
+        renderTrackedOrder(data);
+        if (showFeedback) showToast('Estado actualizado', 'success');
+      }
+    } catch (e) {}
   }
 
   async function handleTrackOrderSubmit(e) {
@@ -1606,6 +1641,11 @@
       }
 
       renderTrackedOrder(data);
+      lastTrackedQuery = { orderId, rawPhone };
+      stopTrackPolling();
+      if (data.estado !== 'entregado' && data.estado !== 'cancelado') {
+        trackPollTimer = setInterval(() => refreshTrackedOrder(false), 12000);
+      }
     } catch (err) {
       console.error(err);
       DOM.trackOrderResult.innerHTML = `<div class="track-empty-msg">Ocurrió un error al consultar el pedido. Intenta nuevamente.</div>`;

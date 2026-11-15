@@ -338,6 +338,15 @@
           <span class="order-total">${formatMoney(order.total)}</span>
           <div class="order-controls">
             ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}?text=${waMsg}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">WhatsApp</a>` : ''}
+            ${(() => {
+              const stepMap = {
+                pendiente: { next: 'preparando', label: 'Preparar envío →' },
+                preparando: { next: 'enviado', label: 'Marcar Enviado →' },
+                enviado: { next: 'entregado', label: 'Marcar Entregado ✓' }
+              };
+              const step = stepMap[order.estado || 'pendiente'];
+              return step ? `<button type="button" class="btn btn-primary btn-sm btn-next-step" data-next="${step.next}">${step.label}</button>` : '';
+            })()}
             <select class="form-select order-status-select" data-order-id="${order.id}">
               ${['pendiente', 'preparando', 'enviado', 'entregado', 'cancelado'].map(st =>
                 `<option value="${st}" ${order.estado === st ? 'selected' : ''}>${st.charAt(0).toUpperCase() + st.slice(1)}</option>`
@@ -376,7 +385,25 @@
         showToast(`Pedido #ORD-${order.id} → ${nextStatus}`, 'success');
         renderResumen();
         renderOrders();
+        renderReceipts();
       });
+
+      const nextStepBtn = card.querySelector('.btn-next-step');
+      if (nextStepBtn) {
+        nextStepBtn.addEventListener('click', async () => {
+          const nextStatus = nextStepBtn.dataset.next;
+          const { error } = await supabase.from('pedidos').update({ estado: nextStatus }).eq('id', order.id);
+          if (error) {
+            showToast('Error al avanzar pedido', 'error');
+            return;
+          }
+          order.estado = nextStatus;
+          showToast(`Pedido #ORD-${order.id} → ${nextStatus}`, 'success');
+          renderResumen();
+          renderOrders();
+          renderReceipts();
+        });
+      }
 
       container.appendChild(card);
     });
@@ -459,6 +486,16 @@
             <a class="btn-outline" href="${waLink}" target="_blank" rel="noopener" style="padding:0.4rem 0.7rem;font-size:0.78rem;${isPaid ? 'border-color:#16a34a;color:#16a34a;font-weight:600;' : ''}">
               ${isPaid ? 'Notificar pago (WhatsApp)' : 'WhatsApp'}
             </a>
+            ${(() => {
+              if (!isPaid) return '';
+              const stepMap = {
+                pendiente: { next: 'preparando', label: 'Preparar envío →' },
+                preparando: { next: 'enviado', label: 'Marcar Enviado →' },
+                enviado: { next: 'entregado', label: 'Marcar Entregado ✓' }
+              };
+              const step = stepMap[order.estado || 'pendiente'];
+              return step ? `<button type="button" class="btn btn-primary btn-sm btn-receipt-next-step" data-next="${step.next}" style="padding:0.4rem 0.75rem;font-size:0.78rem;">${step.label}</button>` : `<span class="status-badge status-entregado">${escapeHTML(order.estado)}</span>`;
+            })()}
             <button type="button" class="btn-outline btn-receipt-toggle-paid" style="padding:0.4rem 0.75rem;font-size:0.78rem;">
               ${isPaid ? 'Pagado ✓' : 'Marcar Pagado'}
             </button>
@@ -469,21 +506,44 @@
       card.querySelector('.receipt-card-img-wrap').addEventListener('click', () => openReceiptModal(order));
       card.querySelector('.btn-receipt-toggle-paid').addEventListener('click', async () => {
         const nextPaid = order.estado_pago === 'pagado' ? 'pendiente' : 'pagado';
-        const { error } = await supabase.from('pedidos').update({ estado_pago: nextPaid }).eq('id', order.id);
+        const updates = { estado_pago: nextPaid };
+        if (nextPaid === 'pagado' && (order.estado || 'pendiente') === 'pendiente') {
+          updates.estado = 'preparando';
+        }
+        const { error } = await supabase.from('pedidos').update(updates).eq('id', order.id);
         if (error) {
           showToast('Error al actualizar estado de pago', 'error');
           return;
         }
         order.estado_pago = nextPaid;
+        if (updates.estado) order.estado = updates.estado;
         showToast(
           nextPaid === 'pagado'
-            ? `Comprobante #ORD-${order.id} verificado — ya puedes notificar al cliente por WhatsApp`
+            ? `Comprobante #ORD-${order.id} verificado → Preparando envío`
             : `Comprobante #ORD-${order.id} → Por verificar`,
           'success'
         );
+        renderResumen();
         renderReceipts();
         renderOrders();
       });
+
+      const receiptNextBtn = card.querySelector('.btn-receipt-next-step');
+      if (receiptNextBtn) {
+        receiptNextBtn.addEventListener('click', async () => {
+          const nextStatus = receiptNextBtn.dataset.next;
+          const { error } = await supabase.from('pedidos').update({ estado: nextStatus }).eq('id', order.id);
+          if (error) {
+            showToast('Error al avanzar pedido', 'error');
+            return;
+          }
+          order.estado = nextStatus;
+          showToast(`Pedido #ORD-${order.id} → ${nextStatus}`, 'success');
+          renderResumen();
+          renderReceipts();
+          renderOrders();
+        });
+      }
 
       grid.appendChild(card);
     });
@@ -930,11 +990,17 @@
     if ($('receiptMarkPaidBtn')) {
       $('receiptMarkPaidBtn').addEventListener('click', async () => {
         if (!activeReceiptOrder) return;
-        const { error } = await supabase.from('pedidos').update({ estado_pago: 'pagado' }).eq('id', activeReceiptOrder.id);
+        const updates = { estado_pago: 'pagado' };
+        if ((activeReceiptOrder.estado || 'pendiente') === 'pendiente') {
+          updates.estado = 'preparando';
+        }
+        const { error } = await supabase.from('pedidos').update(updates).eq('id', activeReceiptOrder.id);
         if (error) return showToast('Error al marcar pagado', 'error');
         activeReceiptOrder.estado_pago = 'pagado';
-        showToast(`Pedido #ORD-${activeReceiptOrder.id} marcado como Pagado`, 'success');
+        if (updates.estado) activeReceiptOrder.estado = updates.estado;
+        showToast(`Pedido #ORD-${activeReceiptOrder.id} verificado → Preparando envío`, 'success');
         closeReceiptModal();
+        renderResumen();
         renderOrders();
         renderReceipts();
       });

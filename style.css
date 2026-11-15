@@ -4633,3 +4633,37 @@ html.theme-transitioning * {
   color: var(--color-text-muted);
   margin: 0;
 }
+
+/* ---- Live Connector Line & Refresh Button in Track Order ---- */
+.track-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 18px;
+  bottom: -14px;
+  width: 2px;
+  background: var(--color-border);
+}
+
+.track-step.done:not(:last-child)::before {
+  background: #16a34a;
+}
+
+.track-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-main);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.track-refresh-btn:hover {
+  border-color: var(--color-primary);
+}
