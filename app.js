@@ -555,7 +555,6 @@
     picked.forEach(prod => {
       const catName = (prod.categorias && prod.categorias.nombre) ? prod.categorias.nombre.trim() : 'Esencial';
       const imgSrc = prod.imagen_url || fallbackImg;
-      const firstInStock = (prod.variantes_producto || []).find(v => v.stock > 0);
 
       const row = document.createElement('div');
       row.className = 'lookbook-item-row';
@@ -567,21 +566,13 @@
           <div class="lookbook-item-price">${formatMoney(prod.precio)}</div>
         </div>
         <div class="lookbook-item-actions">
-          ${firstInStock
-            ? `<button type="button" class="lookbook-quick-btn">+ Añadir (${escapeHTML(firstInStock.talla)})</button>`
-            : `<button type="button" class="lookbook-quick-btn">Ver detalle</button>`}
+          <button type="button" class="lookbook-quick-btn">Elegir talla</button>
         </div>
       `;
 
       row.querySelector('.lookbook-item-thumb').addEventListener('click', () => openProductModal(prod));
       row.querySelector('.lookbook-item-info').addEventListener('click', () => openProductModal(prod));
-      row.querySelector('.lookbook-quick-btn').addEventListener('click', () => {
-        if (firstInStock) {
-          addToCart(prod, firstInStock, 1, row.querySelector('.lookbook-item-thumb'));
-        } else {
-          openProductModal(prod);
-        }
-      });
+      row.querySelector('.lookbook-quick-btn').addEventListener('click', () => openProductModal(prod));
 
       listEl.appendChild(row);
     });
