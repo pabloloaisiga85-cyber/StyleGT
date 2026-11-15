@@ -1587,7 +1587,7 @@
     DOM.trackOrderSubmitBtn.textContent = 'Buscando...';
 
     try {
-      const { data, error } = await supabaseClient.rpc('consultar_pedido', {
+      const { data, error } = await supabase.rpc('consultar_pedido', {
         p_id: orderId,
         p_telefono: rawPhone
       });
@@ -1606,6 +1606,10 @@
       }
 
       renderTrackedOrder(data);
+    } catch (err) {
+      console.error(err);
+      DOM.trackOrderResult.innerHTML = `<div class="track-empty-msg">Ocurrió un error al consultar el pedido. Intenta nuevamente.</div>`;
+      DOM.trackOrderResult.style.display = 'block';
     } finally {
       DOM.trackOrderSubmitBtn.disabled = false;
       DOM.trackOrderSubmitBtn.textContent = origText;
