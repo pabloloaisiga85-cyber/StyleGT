@@ -820,16 +820,34 @@ html, body {
   }
 
   .nav-tab {
-    padding: 0.55rem 0.7rem;
+    padding: 0.6rem 0.7rem;
     font-size: 0.82rem;
     justify-content: center;
+    gap: 0.45rem;
     min-width: 0;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .nav-tab.active {
+    background: var(--primary);
+    color: var(--primary-text);
+    border-color: var(--primary);
+  }
+
+  .nav-tab .tab-badge {
+    margin-left: 0.15rem;
   }
 
   .sidebar-footer {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
+  }
+
+  .sidebar-footer .btn-ghost {
+    border: 1px solid var(--border);
+    background: var(--bg);
   }
 
   .admin-main {
