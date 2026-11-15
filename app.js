@@ -1579,6 +1579,14 @@
     }
 
     // Command Palette Search Listeners
+    const searchBoxEl = document.querySelector('.navbar .search-box');
+    if (searchBoxEl) {
+      searchBoxEl.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          openCmdPalette();
+        }
+      });
+    }
     if (DOM.openCmdPaletteBtn) {
       DOM.openCmdPaletteBtn.addEventListener('click', openCmdPalette);
     }

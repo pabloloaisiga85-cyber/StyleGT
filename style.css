@@ -4177,3 +4177,88 @@ html.theme-transitioning * {
   background-color: #111114;
   border-top: 1px solid var(--color-border);
 }
+
+/* ==========================================================================
+   Mobile Responsive Polish (Navbar Icons, Search Trigger & Hero CTAs)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .navbar {
+    top: 8px;
+    width: calc(100% - 1rem);
+    margin: 8px auto 0;
+    height: 58px;
+    border-radius: 14px;
+  }
+
+  .navbar .navbar-container {
+    gap: 0.5rem;
+    padding: 0 0.85rem;
+  }
+
+  .brand-logo {
+    gap: 0.45rem;
+    flex-shrink: 0;
+  }
+
+  .brand-logo-img {
+    height: 30px;
+  }
+
+  .brand-name {
+    font-size: 1.22rem;
+  }
+
+  .nav-actions {
+    gap: 0.45rem;
+    flex-shrink: 0;
+  }
+
+  .nav-icon-btn,
+  .cart-trigger-btn {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .cart-badge {
+    top: -3px;
+    right: -3px;
+    width: 18px;
+    height: 18px;
+    font-size: 0.65rem;
+  }
+
+  /* Turn search-box into a clean circular search icon button on mobile */
+  .navbar .search-box {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .navbar .search-box:focus-within {
+    width: 36px;
+  }
+
+  .navbar .search-box input,
+  .navbar .search-box .clear-search-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-cta-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.65rem;
+  }
+
+  .hero-cta-group .btn {
+    width: 100%;
+    justify-content: center;
+    white-space: nowrap;
+  }
+}
