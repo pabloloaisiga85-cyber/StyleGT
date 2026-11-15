@@ -4144,3 +4144,36 @@ html.theme-transitioning * {
   border-color: var(--color-border);
   color: var(--color-text-muted);
 }
+
+/* Fix all primary-filled elements that had hardcoded white text */
+[data-theme="dark"] .btn-quick-view {
+  background-color: #202024;
+  color: #f4f4f5;
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .product-card:hover .btn-quick-view,
+[data-theme="dark"] .cart-trigger-btn:hover,
+[data-theme="dark"] .modal-close-btn:hover,
+[data-theme="dark"] .color-chip.active,
+[data-theme="dark"] .cart-drawer-badge,
+[data-theme="dark"] .toast,
+[data-theme="dark"] .cmd-k-badge:hover,
+[data-theme="dark"] .bento-view-all:hover,
+[data-theme="dark"] .sg-tab.active,
+[data-theme="dark"] .sg-unit.active {
+  background-color: #f4f4f5;
+  color: #111111;
+  border-color: #f4f4f5;
+}
+
+[data-theme="dark"] .cart-trigger-btn:hover .cart-badge {
+  background-color: #111111;
+  color: #f4f4f5;
+  border-color: #111111;
+}
+
+[data-theme="dark"] .footer {
+  background-color: #111114;
+  border-top: 1px solid var(--color-border);
+}
