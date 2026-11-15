@@ -3511,3 +3511,115 @@ a i, a svg,
     grid-auto-rows: 170px;
   }
 }
+
+
+/* ==========================================================================
+   Hydrogen Micro-Animations: Fly-to-Cart & Purchase Celebration
+   ========================================================================== */
+
+/* Flying Product Thumbnail */
+.fly-cart-clone {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 12px 28px rgba(17, 17, 17, 0.22);
+  transition:
+    left 0.52s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.52s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.52s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.52s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.52s ease,
+    transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Cart Button Elastic Pop */
+.cart-trigger-btn.animate-pop {
+  animation: cartBagBounce 0.48s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cartBagBounce {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.24) rotate(-6deg); }
+  70% { transform: scale(0.94) rotate(3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Success Modal Checkmark Draw & Entrance */
+.modal-backdrop.open .success-card {
+  animation: successCardPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes successCardPop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.success-check-svg {
+  width: 58px;
+  height: 58px;
+  display: block;
+}
+
+.success-check-circle {
+  stroke: var(--color-success);
+  stroke-width: 2.5;
+  stroke-dasharray: 160;
+  stroke-dashoffset: 160;
+}
+
+.success-check-tick {
+  stroke: var(--color-success);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+}
+
+.modal-backdrop.open .success-check-circle {
+  animation: drawCircle 0.55s cubic-bezier(0.65, 0, 0.45, 1) 0.1s forwards;
+}
+
+.modal-backdrop.open .success-check-tick {
+  animation: drawCheck 0.38s cubic-bezier(0.65, 0, 0.45, 1) 0.5s forwards;
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes drawCheck {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Editorial Confetti Particles */
+.confetti-particle {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  border-radius: 2px;
+  will-change: transform, opacity;
+  animation: confettiBurst var(--dur, 1.8s) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes confettiBurst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx, 0px), var(--ty, 180px)) rotate(var(--rot, 360deg)) scale(0.6);
+  }
+}

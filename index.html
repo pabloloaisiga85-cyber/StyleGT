@@ -48,7 +48,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
   <!-- Main Stylesheet (con version para forzar refresco en móviles) -->
-  <link rel="stylesheet" href="style.css?v=2.4">
+  <link rel="stylesheet" href="style.css?v=2.5">
 </head>
 
 <body>
@@ -565,7 +565,10 @@
   <div class="modal-backdrop" id="successModal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-card modal-sm success-card">
       <div class="success-icon-wrap">
-        <i data-lucide="check-circle-2" class="icon-xl success-icon"></i>
+        <svg class="success-check-svg" viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="success-check-circle" cx="26" cy="26" r="24" fill="none" />
+          <path class="success-check-tick" fill="none" d="M15 27l7 7 15-15" />
+        </svg>
       </div>
 
       <h2 class="success-title">¡Pedido Confirmado!</h2>
