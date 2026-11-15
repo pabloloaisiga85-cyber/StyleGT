@@ -60,7 +60,7 @@
   </script>
 
   <!-- Main Stylesheet (con version para forzar refresco en móviles) -->
-  <link rel="stylesheet" href="style.css?v=3.3">
+  <link rel="stylesheet" href="style.css?v=3.4">
 </head>
 
 <body>
@@ -81,7 +81,6 @@
       <!-- Desktop Navigation links -->
       <nav class="nav-links">
         <a href="#catalogo" class="nav-link active">Colección</a>
-        <a href="#colecciones-bento" class="nav-link">Categorías</a>
         <a href="#lookbook" class="nav-link">Lookbook</a>
         <a href="#nosotros" class="nav-link">Filosofía</a>
       </nav>
@@ -196,29 +195,6 @@
           <h4>Compra Confiable</h4>
           <p>Inventario sincronizado y atención personalizada</p>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Asymmetric Bento Collections (Dynamic from Supabase) -->
-  <section class="bento-collections-section" id="colecciones-bento">
-    <div class="container">
-      <div class="bento-header">
-        <div>
-          <span class="editorial-kicker">Curaduría 2026</span>
-          <h2 class="section-title">Explora por Silueta</h2>
-        </div>
-        <a href="#catalogo" class="bento-view-all">
-          <span>Ver todo</span>
-          <i data-lucide="arrow-up-right" class="icon-xs"></i>
-        </a>
-      </div>
-      <div class="bento-grid" id="bentoCollectionsGrid">
-        <!-- Skeleton placeholders while Supabase loads -->
-        <div class="bento-card bento-card-featured skeleton-bento"></div>
-        <div class="bento-card skeleton-bento"></div>
-        <div class="bento-card skeleton-bento"></div>
-        <div class="bento-card skeleton-bento"></div>
       </div>
     </div>
   </section>
@@ -921,7 +897,7 @@
   </div>
 
   <!-- Main JavaScript App -->
-  <script src="app.js"></script>
+  <script src="app.js?v=3.4"></script>
 </body>
 
 </html>

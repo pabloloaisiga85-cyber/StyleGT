@@ -140,7 +140,6 @@
     toastContainer: document.getElementById('toastContainer'),
 
     // Hydrogen Editorial Upgrade Elements
-    bentoCollectionsGrid: document.getElementById('bentoCollectionsGrid'),
     shopTheLookContainer: document.getElementById('shopTheLookContainer'),
     cartShippingProgressText: document.getElementById('cartShippingProgressText'),
     cartShippingFill: document.getElementById('cartShippingFill'),
@@ -259,7 +258,6 @@
       if (error) throw error;
       state.categories = data || [];
       renderCategoryFilters();
-      renderBentoCollections();
     } catch (err) {
       console.error('Error fetching categorias:', err);
       showToast('No se pudieron cargar las categorías', 'error');
@@ -278,7 +276,6 @@
       state.products = data || [];
       renderProducts();
       renderHeroCarousel();
-      renderBentoCollections();
       renderShopTheLook();
     } catch (err) {
       console.error('Error fetching productos:', err);
@@ -499,46 +496,8 @@
   }
 
   /* ==========================================================================
-     6.0 Bento Collections & Shop the Look (Dynamic from Supabase)
+     6.0 Shop the Look (Dynamic from Supabase)
      ========================================================================== */
-  function renderBentoCollections() {
-    if (!DOM.bentoCollectionsGrid || !state.categories.length || !state.products.length) return;
-
-    const fallbackImg = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80';
-    DOM.bentoCollectionsGrid.innerHTML = '';
-
-    state.categories.slice(0, 4).forEach((cat, index) => {
-      const catProducts = state.products.filter(p => Number(p.categoria_id) === Number(cat.id));
-      const coverProduct = catProducts.find(p => p.imagen_url) || state.products[index % state.products.length];
-      const coverImg = (coverProduct && coverProduct.imagen_url) ? coverProduct.imagen_url : fallbackImg;
-
-      const card = document.createElement('div');
-      card.className = `bento-card ${index === 0 ? 'bento-card-featured' : ''}`;
-      card.innerHTML = `
-        <img src="${coverImg}" alt="${escapeHTML(cat.nombre)}" loading="lazy" onerror="this.src='${fallbackImg}'">
-        <div class="bento-card-overlay">
-          <span class="bento-card-count">${catProducts.length} prenda${catProducts.length === 1 ? '' : 's'}</span>
-          <div class="bento-card-title">
-            <span>${escapeHTML(cat.nombre)}</span>
-            <i data-lucide="arrow-up-right" class="icon-sm"></i>
-          </div>
-        </div>
-      `;
-
-      card.addEventListener('click', () => {
-        state.activeCategory = String(cat.id);
-        renderCategoryFilters();
-        renderProducts();
-        const catalogEl = document.getElementById('catalogo');
-        if (catalogEl) catalogEl.scrollIntoView({ behavior: 'smooth' });
-      });
-
-      DOM.bentoCollectionsGrid.appendChild(card);
-    });
-
-    if (window.lucide) window.lucide.createIcons();
-  }
-
   function renderShopTheLook() {
     if (!DOM.shopTheLookContainer || !state.products.length) return;
 
