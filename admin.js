@@ -14,6 +14,7 @@
     orders: [],
     activeTab: 'resumen',
     orderStatusFilter: 'all',
+    receiptFilter: 'all',
     onlyLowStock: false,
     croppedBlob: null,
     cropper: null
@@ -172,6 +173,7 @@
   function renderAll() {
     renderResumen();
     renderOrders();
+    renderReceipts();
     renderCategorySelects();
     renderProductsTable();
     renderCategoriesList();
@@ -184,6 +186,7 @@
   const TAB_META = {
     resumen: ['Resumen', 'Estado general de ventas, pedidos e inventario.'],
     pedidos: ['Pedidos', 'Gestiona estados de envío y contacta clientes por WhatsApp.'],
+    comprobantes: ['Comprobantes', 'Verifica las fotos de transferencia y marca los pagos confirmados.'],
     productos: ['Productos & Variantes', 'Crea, edita, pausa o elimina prendas y sus tallas/colores.'],
     categorias: ['Categorías', 'Organiza las colecciones de tu tienda.']
   };
@@ -359,6 +362,7 @@
         order.estado_pago = nextPaid;
         showToast(`Pago #ORD-${order.id} → ${nextPaid === 'pagado' ? 'Pagado' : 'Por cobrar'}`, 'success');
         renderOrders();
+        renderReceipts();
       });
 
       card.querySelector('.order-status-select').addEventListener('change', async (e) => {
@@ -375,6 +379,97 @@
       });
 
       container.appendChild(card);
+    });
+  }
+
+  /* ==========================================================================
+     Tab: Comprobantes de Transferencia
+     ========================================================================== */
+  function renderReceipts() {
+    const withReceipts = state.orders.filter(o => Boolean(o.comprobante_url));
+    const pendingCount = withReceipts.filter(o => o.estado_pago !== 'pagado').length;
+
+    const badge = $('pendingReceiptsBadge');
+    if (badge) {
+      badge.textContent = pendingCount;
+      badge.style.display = pendingCount > 0 ? 'inline-flex' : 'none';
+    }
+
+    const filtered = state.receiptFilter === 'all'
+      ? withReceipts
+      : state.receiptFilter === 'pagado'
+        ? withReceipts.filter(o => o.estado_pago === 'pagado')
+        : withReceipts.filter(o => o.estado_pago !== 'pagado');
+
+    const grid = $('receiptsGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">No hay comprobantes ${state.receiptFilter === 'all' ? 'subidos todavía' : 'en esta categoría'}.</div>`;
+      return;
+    }
+
+    filtered.forEach(order => {
+      const isPaid = order.estado_pago === 'pagado';
+      const dateStr = new Date(order.created_at).toLocaleString('es-NI', { dateStyle: 'medium', timeStyle: 'short' });
+      const itemsHtml = (order.items_pedido || []).map(it => {
+        const pName = it.variantes_producto?.productos?.nombre || 'Producto';
+        const talla = it.variantes_producto?.talla || '-';
+        const color = it.variantes_producto?.color || '-';
+        return `<div><strong>${it.cantidad}x</strong> ${escapeHTML(pName)} <span style="color:var(--muted);">(${escapeHTML(talla)} / ${escapeHTML(color)})</span> — ${formatMoney(it.precio_unitario)}</div>`;
+      }).join('');
+
+      const cleanPhone = (order.telefono || '').replace(/[^0-9]/g, '');
+      const waLink = `https://wa.me/${cleanPhone.startsWith('505') ? cleanPhone : '505' + cleanPhone}?text=${encodeURIComponent(`Hola ${order.nombre_cliente}, revisamos tu comprobante del pedido #ORD-${order.id} en StyleGT.`)}`;
+
+      const card = document.createElement('div');
+      card.className = 'receipt-card';
+      card.innerHTML = `
+        <div class="receipt-card-img-wrap" title="Click para ampliar comprobante">
+          <img class="receipt-card-img" src="${escapeHTML(order.comprobante_url)}" alt="Comprobante #ORD-${order.id}" loading="lazy" />
+          <span class="receipt-card-zoom-hint">Ampliar foto</span>
+        </div>
+        <div class="receipt-card-body">
+          <div class="receipt-card-head">
+            <div>
+              <div class="receipt-card-client">${escapeHTML(order.nombre_cliente)}</div>
+              <div class="receipt-card-meta">#ORD-${order.id} · ${dateStr} · Tel: ${escapeHTML(order.telefono)}</div>
+            </div>
+            <span class="status-badge ${isPaid ? 'status-entregado' : 'status-pendiente'}">
+              ${isPaid ? 'Verificado' : 'Por verificar'}
+            </span>
+          </div>
+          <div class="receipt-card-items">
+            ${itemsHtml || '<span style="color:var(--muted);">Sin detalle de productos</span>'}
+          </div>
+        </div>
+        <div class="receipt-card-footer">
+          <strong style="font-size:1.05rem;">${formatMoney(order.total)}</strong>
+          <div class="receipt-card-actions">
+            <a class="btn-outline" href="${waLink}" target="_blank" rel="noopener" style="padding:0.4rem 0.7rem;font-size:0.78rem;">WhatsApp</a>
+            <button type="button" class="btn-outline btn-receipt-toggle-paid" style="padding:0.4rem 0.75rem;font-size:0.78rem;">
+              ${isPaid ? 'Pagado ✓' : 'Marcar Pagado'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      card.querySelector('.receipt-card-img-wrap').addEventListener('click', () => openReceiptModal(order));
+      card.querySelector('.btn-receipt-toggle-paid').addEventListener('click', async () => {
+        const nextPaid = order.estado_pago === 'pagado' ? 'pendiente' : 'pagado';
+        const { error } = await supabase.from('pedidos').update({ estado_pago: nextPaid }).eq('id', order.id);
+        if (error) {
+          showToast('Error al actualizar estado de pago', 'error');
+          return;
+        }
+        order.estado_pago = nextPaid;
+        showToast(`Comprobante #ORD-${order.id} → ${nextPaid === 'pagado' ? 'Verificado' : 'Por verificar'}`, 'success');
+        renderReceipts();
+        renderOrders();
+      });
+
+      grid.appendChild(card);
     });
   }
 
@@ -777,6 +872,15 @@
       });
     });
 
+    document.querySelectorAll('#receiptFilterPills .pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('#receiptFilterPills .pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        state.receiptFilter = pill.dataset.filter;
+        renderReceipts();
+      });
+    });
+
     $('prodSearchInput').addEventListener('input', renderProductsTable);
     $('prodCatFilter').addEventListener('change', renderProductsTable);
     if ($('prodLowStockFilterBtn')) {
@@ -816,6 +920,7 @@
         showToast(`Pedido #ORD-${activeReceiptOrder.id} marcado como Pagado`, 'success');
         closeReceiptModal();
         renderOrders();
+        renderReceipts();
       });
     }
   }

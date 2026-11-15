@@ -27,7 +27,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <link rel="stylesheet" href="admin.css?v=1.9">
+  <link rel="stylesheet" href="admin.css?v=2.0">
 </head>
 
 <body>
@@ -97,6 +97,11 @@
           <i data-lucide="shopping-bag" class="icon-sm"></i>
           <span>Pedidos</span>
           <span id="pendingOrdersBadge" class="tab-badge" style="display: none;">0</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="comprobantes">
+          <i data-lucide="receipt" class="icon-sm"></i>
+          <span>Comprobantes</span>
+          <span id="pendingReceiptsBadge" class="tab-badge" style="display: none;">0</span>
         </button>
         <button type="button" class="nav-tab" data-tab="productos">
           <i data-lucide="shirt" class="icon-sm"></i>
@@ -187,6 +192,18 @@
           </div>
         </div>
         <div id="ordersList" class="orders-grid"></div>
+      </section>
+
+      <!-- TAB 2.5: Comprobantes de Transferencia -->
+      <section id="tab-comprobantes" class="tab-panel">
+        <div class="toolbar">
+          <div class="filter-pills" id="receiptFilterPills">
+            <button type="button" class="pill active" data-rfilter="all">Todos</button>
+            <button type="button" class="pill" data-rfilter="pendiente">Por verificar</button>
+            <button type="button" class="pill" data-rfilter="pagado">Verificados</button>
+          </div>
+        </div>
+        <div id="receiptsGrid" class="receipts-grid"></div>
       </section>
 
       <!-- TAB 3: Productos & Variantes -->
@@ -356,7 +373,7 @@
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="admin.js?v=1.9"></script>
+  <script src="admin.js?v=2.0"></script>
 </body>
 
 </html>
