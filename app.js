@@ -165,6 +165,7 @@
     miniCartShippingFill: document.getElementById('miniCartShippingFill'),
     miniCartViewBtn: document.getElementById('miniCartViewBtn'),
     miniCartCheckoutBtn: document.getElementById('miniCartCheckoutBtn'),
+    themeToggleBtn: document.getElementById('themeToggleBtn'),
 
     // Admin Dashboard
     openAdminBtn: document.getElementById('openAdminBtn'),
@@ -1521,6 +1522,11 @@
       if (e.target === DOM.successModal) closeSuccessModal();
     });
 
+    // Theme Toggle (Light / Dark)
+    if (DOM.themeToggleBtn) {
+      DOM.themeToggleBtn.addEventListener('click', toggleTheme);
+    }
+
     // Escape Key & Ctrl+K / Cmd+K Command Palette Shortcut
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -2202,6 +2208,64 @@
       });
       DOM.cmdPaletteResults.appendChild(item);
     });
+  }
+
+  /* ==========================================================================
+     11.6 Dark Mode Toggle with Circular Reveal Animation
+     ========================================================================== */
+  function applyTheme(nextTheme) {
+    if (nextTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    try {
+      localStorage.setItem('stylegt_theme', nextTheme);
+    } catch (e) {}
+  }
+
+  function toggleTheme(event) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const nextTheme = isDark ? 'light' : 'dark';
+
+    const btn = DOM.themeToggleBtn;
+    const rect = btn ? btn.getBoundingClientRect() : null;
+    const x = (event && event.clientX) ? event.clientX : (rect ? rect.left + rect.width / 2 : window.innerWidth - 60);
+    const y = (event && event.clientY) ? event.clientY : (rect ? rect.top + rect.height / 2 : 40);
+
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!document.startViewTransition || prefersReducedMotion) {
+      document.documentElement.classList.add('theme-transitioning');
+      applyTheme(nextTheme);
+      setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 400);
+      return;
+    }
+
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    const transition = document.startViewTransition(() => {
+      applyTheme(nextTheme);
+    });
+
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${endRadius}px at ${x}px ${y}px)`
+          ]
+        },
+        {
+          duration: 540,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          pseudoElement: '::view-transition-new(root)'
+        }
+      );
+    }).catch(() => {});
   }
 
   /* ==========================================================================

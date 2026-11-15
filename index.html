@@ -47,8 +47,20 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
+  <!-- Prevent white flash on dark mode load -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('stylegt_theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Main Stylesheet (con version para forzar refresco en móviles) -->
-  <link rel="stylesheet" href="style.css?v=2.8">
+  <link rel="stylesheet" href="style.css?v=2.9">
 </head>
 
 <body>
@@ -87,6 +99,13 @@
             <span>⌘K</span>
           </button>
         </div>
+
+        <!-- Theme Toggle (Light / Dark) -->
+        <button id="themeToggleBtn" class="nav-icon-btn theme-toggle-btn" type="button"
+          aria-label="Cambiar modo claro u oscuro" title="Cambiar tema">
+          <i data-lucide="sun" class="icon-sm theme-icon-sun"></i>
+          <i data-lucide="moon" class="icon-sm theme-icon-moon"></i>
+        </button>
 
         <!-- Admin Portal Trigger -->
         <button id="openAdminBtn" class="nav-icon-btn" aria-label="Panel de Administración"
